@@ -11,15 +11,21 @@ tags:
   - name: health
     description: Health operations
 paths:
-  /healthz:
+  /health:
     get:
       operationId: healthCheck
       tags: [health]
-      summary: Health check
-      description: Returns server health status
+      summary: Backend and database health check
+      description: Returns whether the API server and external MySQL database are reachable
       responses:
         "200":
-          description: Healthy
+          description: API and database are healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: Database is unavailable
           content:
             application/json:
               schema:
@@ -30,6 +36,10 @@ components:
       type: object
       properties:
         status:
+          type: string
+        db:
+          type: string
+        error:
           type: string
       required:
         - status

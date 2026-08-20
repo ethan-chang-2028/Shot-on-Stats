@@ -1,0 +1,1 @@
+- [External MySQL connection](external-mysql-connection.md) — validate the URL scheme because the workspace may expose a non-MySQL DATABASE_URL.

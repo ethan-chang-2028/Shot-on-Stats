@@ -1,5 +1,7 @@
+import "dotenv/config";
 import app from "./app";
 import { logger } from "./lib/logger";
+import { checkDatabaseConnection } from "./lib/mysql";
 
 const rawPort = process.env["PORT"];
 
@@ -15,11 +17,17 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
+async function start() {
+  try {
+    await checkDatabaseConnection();
+    logger.info("MySQL database connected");
+  } catch (error) {
+    logger.error({ err: error }, "Unable to connect to MySQL database");
   }
 
-  logger.info({ port }, "Server listening");
-});
+  app.listen(port, () => {
+    logger.info({ port }, "Server listening");
+  });
+}
+
+void start();

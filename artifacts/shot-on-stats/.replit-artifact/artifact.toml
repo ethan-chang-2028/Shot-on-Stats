@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Shot on Stats"
+description = "A minimal full-stack connection scaffold with a React health-check page and an Express API that verifies external MySQL connectivity."
+version = "1.0.0"
+id = "artifacts/shot-on-stats"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19260
+
+[services.development]
+run = "pnpm --filter @workspace/shot-on-stats run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/shot-on-stats", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/shot-on-stats/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19260"
+BASE_PATH = "/"
