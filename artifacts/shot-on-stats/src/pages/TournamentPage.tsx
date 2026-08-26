@@ -84,8 +84,8 @@ const WEBSITE_FLOW_DATA = [
 
 // Tournament flow data
 const TOURNAMENT_FLOW_DATA = [
-  { stage: 'group', label: 'Group Stage', teams: '32 teams', matches: '48 matches', next: 'Round of 16' },
-  { stage: 'round16', label: 'Round of 16', teams: '16 teams', matches: '8 matches', next: 'Quarterfinals' },
+  { stage: 'group', label: 'Group Stage', teams: '48 teams', matches: '72 matches', next: 'Round of 32' },
+  { stage: 'round16', label: 'Round of 32', teams: '32 teams', matches: '16 matches', next: 'Round of 16' },
   { stage: 'quarterfinal', label: 'Quarterfinals', teams: '8 teams', matches: '4 matches', next: 'Semifinals' },
   { stage: 'semifinal', label: 'Semifinals', teams: '4 teams', matches: '2 matches', next: 'Final & 3rd Place' },
   { stage: 'final', label: 'Final', teams: '2 teams', matches: '1 match', next: 'Champion' },

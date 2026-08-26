@@ -227,11 +227,16 @@ class TournamentSimulator {
 
     for (const group of this.tournament.groups) {
       const groupStandings = this.progress.groupStandings[group.name] || [];
+      // Top 2 teams from each group advance
       const topTwo = groupStandings.slice(0, 2);
       advancedTeams.push(...topTwo);
     }
 
-    return advancedTeams;
+    // For 2026 format: 48 teams, 12 groups, top 2 from each group = 24 teams
+    // Plus 8 best third-place teams = 32 teams for Round of 32
+    // For demo simplicity, we'll just use top 2 from each group
+    // Since we have 12 groups * 2 = 24 teams, we'll take first 16 for Round of 16
+    return advancedTeams.slice(0, 16);
   }
 
   async simulateTournament(
