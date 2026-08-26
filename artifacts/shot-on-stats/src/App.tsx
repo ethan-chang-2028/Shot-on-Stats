@@ -1,17 +1,5 @@
 import { type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  Activity,
-  Check,
-  CircleAlert,
-  Database,
-  RefreshCw,
-  Server,
-} from 'lucide-react';
-// import { useHealthCheck } from '@workspace/api-client-react';
-import SimulationPage from '@/pages/SimulationPage';
-import NotFound from '@/pages/not-found';
-import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
@@ -20,6 +8,9 @@ import {
   useLocation,
   Router as WouterRouter,
 } from 'wouter';
+import TournamentPage from '@/pages/TournamentPage';
+import NotFound from '@/pages/not-found';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 const queryClient = new QueryClient();
 
@@ -27,7 +18,7 @@ function Router() {
   return (
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={SimulationPage} />
+        <Route path="/" component={TournamentPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
