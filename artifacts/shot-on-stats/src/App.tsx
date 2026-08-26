@@ -8,6 +8,7 @@ import {
   useLocation,
   Router as WouterRouter,
 } from 'wouter';
+import HomePage from '@/pages/HomePage';
 import TournamentPage from '@/pages/TournamentPage';
 import NotFound from '@/pages/not-found';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -18,7 +19,8 @@ function Router() {
   return (
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={TournamentPage} />
+        <Route path="/" component={HomePage} />
+        <Route path="/tournament" component={TournamentPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
