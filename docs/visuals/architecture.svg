@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Architecture flowchart for Shot-on-Stats: simplified, SVG so it renders in-browser and in GitHub previews -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" viewBox="0 0 1600 700">
+  <style>
+    .node { rx:12; fill:#DCECF8; stroke:#7AA7D9; stroke-width:2 }
+    .node-purple { fill:#E8D7F0; stroke:#C39BD1 }
+    .node-green { fill:#D9EAD7; stroke:#84B58C }
+    .node-yellow { fill:#F7E7C8; stroke:#E1B96A }
+    .node-red { fill:#F6D7D7; stroke:#E08A8A }
+    .text { font-family:Arial, Helvetica, sans-serif; font-size:14px; fill:#222 }
+    .title { font-size:20px; font-weight:700 }
+    .small { font-size:12px }
+    .arrow { stroke:#9AAFC6; stroke-width:3; fill:none; marker-end:url(#arrowhead) }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9AAFC6" />
+    </marker>
+  </defs>
+
+  <text x="20" y="30" class="title text">Shot-on-Stats — System Architecture</text>
+
+  <!-- Top source boxes -->
+  <g transform="translate(120,60)">
+    <rect class="node-purple" x="0" y="0" width="130" height="46"/>
+    <text x="65" y="30" text-anchor="middle" class="text">Seasons</text>
+  </g>
+  <g transform="translate(320,60)">
+    <rect class="node-purple" x="0" y="0" width="130" height="46"/>
+    <text x="65" y="30" text-anchor="middle" class="text">Countries</text>
+  </g>
+  <g transform="translate(520,60)">
+    <rect class="node" x="0" y="0" width="140" height="46"/>
+    <text x="70" y="30" text-anchor="middle" class="text">Leagues</text>
+  </g>
+
+  <!-- Middle row -->
+  <g transform="translate(40,150)">
+    <rect class="node-green" x="0" y="0" width="120" height="46"/>
+    <text x="60" y="30" text-anchor="middle" class="text">H2H</text>
+  </g>
+  <g transform="translate(190,150)">
+    <rect class="node-green" x="0" y="0" width="120" height="46"/>
+    <text x="60" y="30" text-anchor="middle" class="text">Fixtures</text>
+  </g>
+  <g transform="translate(340,150)">
+    <rect class="node-green" x="0" y="0" width="120" height="46"/>
+    <text x="60" y="30" text-anchor="middle" class="text">Live</text>
+  </g>
+  <g transform="translate(490,150)">
+    <rect class="node-yellow" x="0" y="0" width="120" height="46"/>
+    <text x="60" y="30" text-anchor="middle" class="text">Odds</text>
+  </g>
+  <g transform="translate(640,150)">
+    <rect class="node-yellow" x="0" y="0" width="120" height="46"/>
+    <text x="60" y="30" text-anchor="middle" class="text">Standings</text>
+  </g>
+  <g transform="translate(790,150)">
+    <rect class="node-red" x="0" y="0" width="120" height="46"/>
+    <text x="60" y="30" text-anchor="middle" class="text">Players</text>
+  </g>
+  <g transform="translate(940,150)">
+    <rect class="node" x="0" y="0" width="140" height="46"/>
+    <text x="70" y="30" text-anchor="middle" class="text">Teams</text>
+  </g>
+  <g transform="translate(1100,150)">
+    <rect class="node" x="0" y="0" width="140" height="46"/>
+    <text x="70" y="30" text-anchor="middle" class="text">Venues</text>
+  </g>
+
+  <!-- Lower row examples -->
+  <g transform="translate(60,260)">
+    <rect class="node-green" x="0" y="0" width="140" height="44"/>
+    <text x="70" y="28" text-anchor="middle" class="text">Events / Lineups</text>
+  </g>
+  <g transform="translate(300,260)">
+    <rect class="node-green" x="0" y="0" width="140" height="44"/>
+    <text x="70" y="28" text-anchor="middle" class="text">Fixtures Statistics</text>
+  </g>
+  <g transform="translate(540,260)">
+    <rect class="node-yellow" x="0" y="0" width="140" height="44"/>
+    <text x="70" y="28" text-anchor="middle" class="text">Odds (Live / Pre)</text>
+  </g>
+  <g transform="translate(780,260)">
+    <rect class="node-red" x="0" y="0" width="140" height="44"/>
+    <text x="70" y="28" text-anchor="middle" class="text">Player Stats / Squads</text>
+  </g>
+  <g transform="translate(1020,260)">
+    <rect class="node" x="0" y="0" width="160" height="44"/>
+    <text x="80" y="28" text-anchor="middle" class="text">Team Stats / Transfers</text>
+  </g>
+
+  <!-- Arrows from top to leagues -->
+  <path class="arrow" d="M190 106 L290 106" />
+  <path class="arrow" d="M390 106 L510 106" />
+  <path class="arrow" d="M610 106 L750 106" />
+
+  <!-- Connections from leagues to middle row -->
+  <path class="arrow" d="M600 130 L240 150" />
+  <path class="arrow" d="M600 130 L390 150" />
+  <path class="arrow" d="M600 130 L540 150" />
+  <path class="arrow" d="M600 130 L700 150" />
+  <path class="arrow" d="M600 130 L900 150" />
+
+  <!-- Example interactions -->
+  <path class="arrow" d="M250 196 L150 240" />
+  <path class="arrow" d="M360 196 L420 240" />
+  <path class="arrow" d="M520 196 L580 240" />
+  <path class="arrow" d="M800 196 L840 240" />
+
+  <text x="20" y="660" class="small text">Notes: This SVG is a simplified architecture map. Use it as a visual guide and extend nodes to include data schemas and API endpoints in your docs.</text>
+</svg>
