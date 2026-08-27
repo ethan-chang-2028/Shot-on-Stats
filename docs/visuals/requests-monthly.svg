@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Monthly requests area chart (static SVG snapshot) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="360" viewBox="0 0 1000 360">
+  <style>
+    .bg{fill:#fff}
+    .area{fill:url(#g);stroke:#F0A94E;stroke-width:1}
+    .label{font-family:Arial,Helvetica,sans-serif;font-size:12px;fill:#666}
+    .title{font-family:Arial,Helvetica,sans-serif;font-size:16px;fill:#222;font-weight:700}
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#FFE6C9" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFE6C9" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+  <rect class="bg" width="100%" height="100%"/>
+  <text x="16" y="28" class="title">Monthly Requests</text>
+
+  <path class="area" d="M60 300 L120 280 L180 285 L240 275 L300 278 L360 272 L420 270 L480 268 L540 270 L600 268 L660 265 L720 270 L780 268 L840 270 L900 265 L940 300 Z"/>
+
+  <text x="16" y="60" class="label">3.5k</text>
+  <text x="16" y="140" class="label">2.5k</text>
+  <text x="16" y="220" class="label">1.5k</text>
+  <text x="16" y="300" class="label">0</text>
+
+  <text x="500" y="340" text-anchor="middle" class="label">Day of month</text>
+</svg>

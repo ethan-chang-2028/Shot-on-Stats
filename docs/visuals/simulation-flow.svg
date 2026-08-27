@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Simulation flowchart for Shot-on-Stats: SVG -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <style>
+    .box{fill:#F3F6FB;stroke:#9AB4D9;stroke-width:2;rx:10}
+    .decision{fill:#FFF2D6;stroke:#E0B15A;stroke-width:2}
+    .text{font-family:Arial,Helvetica,sans-serif;fill:#222}
+    .title{font-weight:700;font-size:18px}
+    .arrow{stroke:#7E9FBF;stroke-width:2;fill:none;marker-end:url(#a)}
+  </style>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0,10 3.5,0 7" fill="#7E9FBF"/>
+    </marker>
+  </defs>
+  <text x="20" y="30" class="title text">Simulation Flowchart — Shot-on-Stats</text>
+
+  <!-- Nodes -->
+  <rect x="40" y="60" width="220" height="48" class="box"/>
+  <text x="150" y="92" text-anchor="middle" class="text">Data Ingestion (Fixtures / Players / Odds)</text>
+
+  <rect x="320" y="60" width="200" height="48" class="box"/>
+  <text x="420" y="92" text-anchor="middle" class="text">Preprocessing (Normalize & Enrich)</text>
+
+  <rect x="560" y="60" width="220" height="48" class="box"/>
+  <text x="670" y="92" text-anchor="middle" class="text">Simulation Engine (Match Loop)</text>
+
+  <rect x="840" y="60" width="240" height="48" class="box"/>
+  <text x="960" y="92" text-anchor="middle" class="text">Rendering (UI/Game State)</text>
+
+  <!-- Decision -->
+  <rect x="560" y="150" width="220" height="48" class="decision" rx="8"/>
+  <text x="670" y="182" text-anchor="middle" class="text">Is match finished?</text>
+
+  <!-- Lower nodes -->
+  <rect x="320" y="260" width="220" height="48" class="box"/>
+  <text x="430" y="292" text-anchor="middle" class="text">Event Logging / Persistence</text>
+
+  <rect x="840" y="260" width="240" height="48" class="box"/>
+  <text x="960" y="292" text-anchor="middle" class="text">Final Game State / Analytics</text>
+
+  <!-- Arrows -->
+  <path d="M260 84 L320 84" class="arrow"/>
+  <path d="M520 84 L560 84" class="arrow"/>
+  <path d="M780 84 L840 84" class="arrow"/>
+
+  <path d="M670 108 L670 150" class="arrow"/>
+  <path d="M670 198 L670 260" class="arrow"/>
+
+  <path d="M420 108 L340 260" class="arrow"/>
+  <path d="M960 108 L960 260" class="arrow"/>
+
+  <!-- Loop back if not finished -->
+  <path d="M780 198 C800 220, 450 220, 480 150" class="arrow"/>
+
+  <text x="20" y="660" class="text small">Note: Loop indicates simulation ticks; tune tick interval and randomness seed for reproducible runs.</text>
+</svg>

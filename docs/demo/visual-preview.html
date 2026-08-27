@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shot-on-Stats Visual Preview</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:24px}
+    .row{display:flex;gap:24px;flex-wrap:wrap}
+    .card{background:#fff;border:1px solid #eee;padding:12px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+    svg{max-width:100%;height:auto}
+    canvas{max-width:100%}
+  </style>
+</head>
+<body>
+  <h1>Visual Preview — Shot-on-Stats</h1>
+  <p>Static SVGs and interactive chart demos (Chart.js). The static SVGs are in <code>docs/visuals/</code>.</p>
+
+  <div class="row">
+    <div class="card" style="flex:1 1 600px">
+      <h3>Architecture (SVG)</h3>
+      <object data="/docs/visuals/architecture.svg" type="image/svg+xml" width="100%"></object>
+    </div>
+
+    <div class="card" style="flex:1 1 600px">
+      <h3>Simulation Flowchart (SVG)</h3>
+      <object data="/docs/visuals/simulation-flow.svg" type="image/svg+xml" width="100%"></object>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:18px">
+    <div class="card" style="flex:1 1 480px">
+      <h3>Daily Requests (static)</h3>
+      <object data="/docs/visuals/requests-daily.svg" type="image/svg+xml" width="100%"></object>
+    </div>
+    <div class="card" style="flex:1 1 480px">
+      <h3>Monthly Requests (static)</h3>
+      <object data="/docs/visuals/requests-monthly.svg" type="image/svg+xml" width="100%"></object>
+    </div>
+  </div>
+
+  <hr />
+  <h2>Interactive chart demo (optional)</h2>
+  <p>If you prefer interactive charts, copy the Chart.js snippet below into your app and provide real data.</p>
+  <pre><code>// Example (Chart.js)
+// &lt;canvas id="dailyChart" width="800" height="300"&gt;&lt;/canvas&gt;
+// new Chart(document.getElementById('dailyChart'), { type: 'line', data: {...}, options: {...} })
+</code></pre>
+
+</body>
+</html>

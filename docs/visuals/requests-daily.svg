@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Daily requests area chart (static SVG snapshot) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="360" viewBox="0 0 1000 360">
+  <style>
+    .bg{fill:#fff}
+    .area{fill:url(#g);stroke:#5B8BD6;stroke-width:1}
+    .grid{stroke:#eee}
+    .label{font-family:Arial,Helvetica,sans-serif;font-size:12px;fill:#666}
+    .title{font-family:Arial,Helvetica,sans-serif;font-size:16px;fill:#222;font-weight:700}
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#BFE0FF" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#BFE0FF" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <rect class="bg" width="100%" height="100%"/>
+  <text x="16" y="28" class="title">Daily Requests</text>
+
+  <!-- grid lines -->
+  <g stroke="#f0f0f0">
+    <line x1="60" y1="60" x2="940" y2="60" />
+    <line x1="60" y1="120" x2="940" y2="120" />
+    <line x1="60" y1="180" x2="940" y2="180" />
+    <line x1="60" y1="240" x2="940" y2="240" />
+    <line x1="60" y1="300" x2="940" y2="300" />
+  </g>
+
+  <!-- Simple area path representing sample data -->
+  <path class="area" d="M60 300 L120 290 L180 285 L240 280 L300 282 L360 278 L420 275 L480 270 L540 268 L600 265 L660 260 L720 255 L780 250 L840 260 L900 270 L940 300 Z"/>
+
+  <!-- axes labels -->
+  <text x="16" y="60" class="label">120k</text>
+  <text x="16" y="120" class="label">90k</text>
+  <text x="16" y="180" class="label">60k</text>
+  <text x="16" y="240" class="label">30k</text>
+  <text x="16" y="300" class="label">0</text>
+
+  <text x="500" y="340" text-anchor="middle" class="label">Hour of day</text>
+</svg>
