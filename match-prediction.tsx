@@ -9,7 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -69,6 +69,9 @@ function TeamProbabilityCard({
           <span>{team.teamName}</span>
           <Badge variant="outline">Elo {Math.round(team.elo)}</Badge>
         </CardTitle>
+        <CardDescription>
+          {side === "home" ? "Home team" : "Away team"} Elo rating, used to calculate expected goals and simulate match outcomes.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex items-baseline gap-2">
@@ -111,6 +114,9 @@ function PlayerProjectionsTable({ players }: { players: PlayerProjection[] }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Player projections</CardTitle>
+        <CardDescription>
+          Projected goals, shots, and cards for key players, based on the same 10,000-trial simulation.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -206,15 +212,33 @@ export default function MatchPredictionPage({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
+      {/* Hero Section: Problem & Solution */}
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">
           {data.home.teamName} vs {data.away.teamName}
         </h1>
-        <span className="text-sm text-muted-foreground">
-          {new Date(data.kickoffAt).toLocaleString()}
-        </span>
+        <p className="text-sm text-muted-foreground">
+          Kickoff: {new Date(data.kickoffAt).toLocaleString()}
+        </p>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Data-Driven Match Predictions for Casual Fans
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              <strong>Problem:</strong> Casual and moderately engaged soccer fans want a data-driven read on upcoming matches, but today's options are a bad fit. Pundit "expert picks" give confident opinions with no visible methodology, while raw statistical tools require stats literacy most fans don't have.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              <strong>Solution:</strong> Shot on Stats provides transparent, simulation-based predictions. Watch the Monte Carlo simulation run live, see the underlying Elo ratings and probabilities, and read plain-language AI explanations of why the model favors one side.
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Core Prediction Section */}
       <div className="grid gap-4 md:grid-cols-2">
         <TeamProbabilityCard team={data.home} side="home" />
         <TeamProbabilityCard team={data.away} side="away" />
@@ -223,6 +247,9 @@ export default function MatchPredictionPage({
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Draw probability</CardTitle>
+          <CardDescription>
+            Probability of a draw, based on 10,000 simulated match outcomes.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <span className="text-2xl font-semibold">
@@ -231,12 +258,16 @@ export default function MatchPredictionPage({
         </CardContent>
       </Card>
 
+      {/* AI Explanation */}
       {data.aiExplanation && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
               Why the model favors this outcome
             </CardTitle>
+            <CardDescription>
+              Plain-language explanation generated from the simulation results, not the AI's own opinion.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-muted-foreground">
@@ -246,7 +277,23 @@ export default function MatchPredictionPage({
         </Card>
       )}
 
+      {/* Player Projections */}
       <PlayerProjectionsTable players={data.players} />
+
+      {/* Demo Note */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">About This Demo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            This is a live demonstration of how Shot on Stats works. The simulation runs 10,000 trials to predict match outcomes based on team Elo ratings and home advantage. The AI explanation is generated from the simulation results to provide transparency into the prediction.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            <strong>Target User:</strong> Premier League fans who follow a team casually—watches most weeks, has opinions, but doesn't have the time or background to build their own statistical model.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
