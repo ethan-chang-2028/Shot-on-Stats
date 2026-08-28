@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Database, Shield, TrendingUp } from 'lucide-react';
 import { Link } from 'wouter';
 
+// Import the user's uploaded images
+import statsGraph from '@/public/stats-graph.png';
+import architectureFlow from '@/public/architecture-flow.png';
+
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
 
@@ -43,7 +47,7 @@ export default function HomePage() {
           
           <p className="max-w-2xl mx-auto text-sm leading-6 text-muted-foreground">
             <strong className="text-foreground">Classroom Demo:</strong> 
-            Starting from the {formattedDate} World Cup group stage, 
+            Starting from the {formattedDate} World Cup group stage,
             this interactive demonstration shows how our Monte Carlo simulation engine 
             predicts match outcomes with complete transparency.
           </p>
@@ -63,6 +67,33 @@ export default function HomePage() {
             </Button>
           </div>
         </header>
+
+        {/* STATS GRAPH SECTION - User's first image */}
+        <section className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Live Statistics Dashboard
+              </CardTitle>
+              <CardDescription>
+                Real-time monitoring of our prediction system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl overflow-hidden shadow-lg mb-4">
+                <img
+                  src={statsGraph}
+                  alt="Shot on Stats - System performance and request latency monitoring"
+                  className="w-full h-auto"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                Tracking requests and system latency to ensure optimal performance
+              </p>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Demo Overview Card */}
         <section className="mb-8">
@@ -91,7 +122,7 @@ export default function HomePage() {
                       converting Elo ratings to expected goals.
                     </p>
                   </div>
-                  
+              
                   <div className="text-center p-4">
                     <div className="flex justify-center mb-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/50">
@@ -394,16 +425,60 @@ export default function HomePage() {
           </Card>
         </section>
 
-        {/* How It Works */}
+        {/* ARCHITECTURE FLOW SECTION - User's second image */}
         <section className="mb-8" id="how-it-works">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5" />
-                How It Works
+                <Database className="h-5 w-5" />
+                System Architecture
               </CardTitle>
               <CardDescription>
-                The technical foundation behind our predictions
+                How data flows through Shot on Stats
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl overflow-hidden shadow-lg mb-6">
+                <img
+                  src={architectureFlow}
+                  alt="Shot on Stats - Complete system architecture and data flow diagram"
+                  className="w-full h-auto"
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <h4 className="font-semibold mb-2">Data Sources</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Seasons & Leagues</li>
+                    <li>• Countries & Teams</li>
+                    <li>• Players & Statistics</li>
+                    <li>• Fixtures & Live Data</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Processing Pipeline</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Data Collection</li>
+                    <li>• Elo Rating Calculation</li>
+                    <li>• Monte Carlo Simulation</li>
+                    <li>• Result Aggregation</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* How It Works - Technical Details */}
+        <section className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5" />
+                Technical Implementation
+              </CardTitle>
+              <CardDescription>
+                The prediction engine details
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -657,9 +732,7 @@ export default function HomePage() {
                 <div className="pt-4 border-t border-border">
                   <h4 className="font-semibold mb-3">Secondary Model:</h4>
                   <p className="text-muted-foreground">
-                    Contextual display advertising on the free tier (e.g., Google AdSense), 
-                    excluding gambling/betting ad categories to stay consistent with the 
-                    product's positioning as a <strong>stats tool, not a betting facilitator</strong>.
+                    Contextual display advertising on the free tier
                   </p>
                 </div>
               </div>
@@ -667,236 +740,6 @@ export default function HomePage() {
           </Card>
         </section>
 
-        {/* Competition */}
-        <section className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Competition
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div className="p-4 rounded-lg border border-border bg-secondary/50">
-                  <h4 className="font-semibold mb-2">1. "Supercomputer" Predictions</h4>
-                  <p className="text-muted-foreground">
-                    From sports media outlets (e.g., BBC's Opta-powered season predictor) 
-                    publish a confident conclusion but 
-                    <strong>don't show the underlying calculation or let a user probe 
-                    "what if" scenarios</strong>.
-                  </p>
-                </div>
-                
-                <div className="p-4 rounded-lg border border-border bg-secondary/50">
-                  <h4 className="font-semibold mb-2">2. Sports Betting Odds</h4>
-                  <p className="text-muted-foreground">
-                    Function as an implicit prediction market, but reflect 
-                    <strong>bookmaker margin and risk management</strong>, not a transparent, 
-                    betting-independent statistical model, and are entangled with gambling 
-                    rather than being a pure information product.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-border">
-                  <h4 className="font-semibold mb-3">Our Competitive Advantage:</h4>
-                  <ul className="space-y-2 text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span><strong>Transparency:</strong> Show the simulation running, not just results</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span><strong>Education:</strong> Help users understand the methodology</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span><strong>Interactivity:</strong> "What-if" sandbox for custom scenarios</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span><strong>Independence:</strong> Pure statistical model, no bookmaker bias</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Public Usability */}
-        <section className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Public Usability
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 text-muted-foreground">
-                <p>
-                  The product is a <strong>public website</strong>, reachable at a normal URL 
-                  with no login required to browse free-tier predictions — account creation 
-                  is only needed to unlock the Premium tier.
-                </p>
-                
-                <p>
-                  It works on <strong>desktop and mobile browsers</strong> (responsive layout).
-                </p>
-
-                <div className="pt-4 border-t border-border">
-                  <h4 className="font-semibold mb-3 text-foreground">Suggested Hosting:</h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span>Static frontend on <strong>Vercel</strong> or <strong>Netlify</strong></span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span>Backend API on <strong>Railway</strong> or <strong>Render</strong></span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span>MySQL on free-tier host (<strong>Railway</strong>, <strong>Clever Cloud</strong>, or <strong>PlanetScale</strong>)</span>
-                    </li>
-                  </ul>
-                  <p className="text-sm mt-2">
-                    All viable within a <strong>$0 school-project budget</strong>.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Demo Scope - What You're About to See */}
-        <section className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Demo Scope: What You're About to See
-              </CardTitle>
-              <CardDescription>
-                This is the concrete build target — prioritized for classroom presentation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Core Requirement
-                  </h4>
-                  <p className="text-muted-foreground leading-6 mb-4">
-                    <strong>Show the simulation running, not just its result.</strong>
-                  </p>
-                  
-                  <h5 className="font-medium text-sm mb-3">Build a page with:</h5>
-                  <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside pl-1">
-                    <li>
-                      <strong>Two adjustable inputs:</strong> Team A Elo, Team B Elo (sliders), 
-                      plus a fixed home-advantage constant
-                    </li>
-                    <li>
-                      <strong>A "Run simulation" button</strong> that, on click:
-                      <ul className="mt-1 space-y-1 pl-4">
-                        <li>Converts Elo difference to expected goals using: <code className="bg-background px-1 rounded">expected_goal_diff = (eloA - eloB + homeAdv) / C</code></li>
-                        <li>Runs a <strong>visible, animated Monte Carlo loop</strong> of 10,000 trials</li>
-                        <li>Samples from Poisson distribution using Knuth's algorithm</li>
-                        <li>Updates <strong>live bar charts</strong> as trials accumulate</li>
-                        <li>Displays <strong>live-updating win/draw/loss bar</strong> and running average goals</li>
-                      </ul>
-                    </li>
-                    <li>
-                      <strong>A final summary</strong> with predicted scoreline, win/draw/loss 
-                      percentages, and each team's average simulated goals
-                    </li>
-                  </ol>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-4 rounded-lg border border-border bg-secondary/50">
-                    <h5 className="font-medium text-sm mb-3">Secondary Features (Included):</h5>
-                    <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside pl-1">
-                      <li>Static match page with example</li>
-                      <li>Player projection table</li>
-                      <li>Custom sandbox for "what-if"</li>
-                      <li>AI explanation button</li>
-                    </ol>
-                  </div>
-                  
-                  <div className="p-4 rounded-lg border border-border bg-secondary/50">
-                    <h5 className="font-medium text-sm mb-3">Out of Scope (For Demo):</h5>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li>User accounts/login</li>
-                      <li>Premium paywall</li>
-                      <li>Daily data sync job</li>
-                      <li>Real API-Football integration</li>
-                      <li>Ads, monetization logic</li>
-                      <li>Calibration/backtesting</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border">
-                  <h5 className="font-medium text-sm mb-2">Tech Stack:</h5>
-                  <p className="text-sm text-muted-foreground">
-                    React (Vite) frontend, all simulation logic in plain JS module, 
-                    no database required for the demo — everything runs in memory.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* CTA Section */}
-        <section className="mb-12">
-          <Card>
-            <CardContent className="pt-8">
-              <div className="text-center">
-                <div className="flex justify-center mb-6">
-                  <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-foreground">
-                    <span className="absolute h-8 w-8 rounded-full border-4 border-primary animate-pulse" />
-                    <span className="absolute h-14 w-1.5 rotate-45 bg-primary/70 animate-pulse" />
-                    <span className="absolute h-14 w-1.5 -rotate-45 bg-primary/70 animate-pulse" />
-                  </div>
-                </div>
-                
-                <h2 className="font-display text-3xl font-bold tracking-[-0.02em] mb-4">
-                  Ready to See It in Action?
-                </h2>
-                
-                <p className="max-w-2xl mx-auto text-muted-foreground mb-8">
-                  Experience the full Monte Carlo simulation engine. Watch as 10,000 trials 
-                  run in real-time, converting Elo ratings to predicted outcomes with complete 
-                  transparency. Starting from the 2026 World Cup group stage, simulate individual 
-                  matches or the entire tournament.
-                </p>
-                
-                <Button asChild size="lg" className="text-lg px-8 py-4">
-                  <Link href="/tournament">
-                    <Trophy className="h-5 w-5 mr-2" />
-                    Start Tournament Simulation
-                  </Link>
-                </Button>
-                
-                <p className="text-xs text-muted-foreground mt-6">
-                  Based on Shot_on_Stats_Demo_PRD.md • Classroom Presentation Mode • 
-                  FIFA World Cup 2026 Starting {formattedDate}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Footer */}
-        <footer className="pt-6 border-t border-border/70 text-center font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground pb-8">
-          <p>Shot on Stats - Data-Driven Football Predictions</p>
-          <p className="mt-2">Classroom Demo • Based on PRD Specification</p>
-        </footer>
       </div>
     </main>
   );
