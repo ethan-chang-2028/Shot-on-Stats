@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Database, Shield, TrendingUp } from 'lucide-react';
+import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Database, Shield, TrendingUp, ClipboardCheck } from 'lucide-react';
 import { Link } from 'wouter';
 
 // Import the user's uploaded images
-import statsGraph from '@/public/stats-graph.png';
-import architectureFlow from '@/public/architecture-flow.png';
+import statsGraph from '@/assets/stats-graph.png';
+import architectureFlow from '@/assets/architecture-flow.png';
 
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
@@ -57,6 +57,12 @@ export default function HomePage() {
               <Link href="/tournament">
                 <Trophy className="h-4 w-4 mr-2" />
                 Start Tournament Simulation
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/backtest">
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Backtest vs. Real 2026 Results
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
