@@ -10,6 +10,7 @@ import {
 } from 'wouter';
 import HomePage from '@/pages/HomePage';
 import TournamentPage from '@/pages/TournamentPage';
+import BacktestPage from '@/pages/BacktestPage';
 import NotFound from '@/pages/not-found';
 import { ErrorBoundary } from '@/components/error-boundary';
 
@@ -21,6 +22,7 @@ function Router() {
       <Switch>
         <Route path="/" component={HomePage} />
         <Route path="/tournament" component={TournamentPage} />
+        <Route path="/backtest" component={BacktestPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
