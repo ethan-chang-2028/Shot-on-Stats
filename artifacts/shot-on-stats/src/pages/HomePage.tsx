@@ -5,8 +5,8 @@ import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Databas
 import { Link } from 'wouter';
 
 // Import the user's uploaded images
-import statsGraph from '@/public/stats-graph.png';
-import architectureFlow from '@/public/architecture-flow.png';
+import statsGraph from '@/assets/stats-graph.png';
+import architectureFlow from '@/assets/architecture-flow.png';
 
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
