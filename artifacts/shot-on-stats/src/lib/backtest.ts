@@ -37,7 +37,7 @@ export function runBacktest(numTrials = 10000): BacktestMatchComparison[] {
     const result = runSimulation({
       eloA: match.teamA.elo,
       eloB: match.teamB.elo,
-      homeAdvantage: 0, // knockout-stage World Cup matches are played at neutral venues
+      homeAdvantage: 0, // matches the no-home-advantage design used elsewhere in this demo
       baselineGoals: 1.3,
       c: 200,
       numTrials,

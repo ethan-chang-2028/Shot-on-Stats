@@ -64,10 +64,10 @@ export default function BacktestPage() {
           </h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
             This runs the exact same Elo → expected-goals → Poisson Monte Carlo engine used
-            elsewhere in this demo against real knockout-stage matches from the completed 2026
-            FIFA World Cup — using only the pre-tournament Elo ratings the model would have had
-            before each match kicked off. Nothing here is precomputed: click "Run Backtest" to
-            fire 10,000 fresh trials per match, live, in your browser.
+            elsewhere in this demo against every real match from the completed 2026 FIFA World
+            Cup — group stage through the Final — using only the pre-tournament Elo ratings the
+            model would have had before each match kicked off. Nothing here is precomputed: click
+            "Run Backtest" to fire 10,000 fresh trials per match, live, in your browser.
           </p>
         </header>
 
@@ -79,7 +79,7 @@ export default function BacktestPage() {
                 Run the Backtest
               </CardTitle>
               <CardDescription>
-                {TOTAL_MATCHES} real knockout matches, from the Round of 32 through the Final
+                {TOTAL_MATCHES} real matches, from the Group Stage through the Final
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -126,7 +126,7 @@ export default function BacktestPage() {
               </Card>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              A high-variance sample by design — {TOTAL_MATCHES} knockout matches, not a full season —
+              A high-variance sample by design — {TOTAL_MATCHES} matches, not a full season —
               so treat this as a demonstration of the validation method (PRD Section 9), not a
               claim of production-grade accuracy. Deep knockout runs are exactly where a
               no-home-advantage, independent-Poisson model is expected to miss some upsets
