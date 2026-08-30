@@ -31,21 +31,27 @@ import {
   Cell
 } from 'recharts';
 import { TournamentSimulator } from '@/lib/tournamentSimulation';
-import { 
-  WORLD_CUP_2026, 
-  TournamentStage, 
+import { runSimulation, getMostLikelyScoreline } from '@/lib/simulation';
+import { computeGroupStandings, advanceFromGroupStage, seedKnockoutTeams, decideMatchOutcome } from '@/lib/tournamentAdvancement';
+import {
+  WORLD_CUP_2026,
+  TournamentStage,
   TournamentMatch,
   TournamentTeam,
   STAGE_LABELS,
+  TOURNAMENT_STAGE_ORDER,
   getNextStage,
   getPreviousStage,
-  generateGroupMatches
+  generateGroupMatches,
+  generateKnockoutMatches
 } from '@/types/tournament';
 
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
 
-// Poisson random function (Knuth's algorithm)
+// Poisson random draw (Knuth's algorithm), used only for the animated
+// single-match trial-by-trial display; the actual decisive bracket result
+// comes from decideMatchOutcome (see lib/tournamentAdvancement).
 function poissonRandom(lambda: number): number {
   if (lambda <= 0) return 0;
   let L = Math.exp(-lambda);
@@ -74,6 +80,16 @@ interface SimulationProgress {
     draws: number;
     losses: number;
   };
+}
+
+interface MatchStats {
+  winProbability: number;
+  drawProbability: number;
+  lossProbability: number;
+  avgGoalsA: number;
+  avgGoalsB: number;
+  mostLikelyScore: string;
+  simulationResult: unknown;
 }
 
 interface MatchResult {
@@ -106,31 +122,44 @@ export default function TournamentPage() {
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [matchResults, setMatchResults] = useState<Record<string, MatchResult>>({});
 
+  // simulator/progress/tournament are plain mutable objects (not React
+  // state), so mutating them - a completed match, updated standings, a
+  // freshly-generated next stage - doesn't itself trigger a re-render or
+  // change any object's *reference*. Every useMemo below that derives from
+  // them takes this counter as a dependency and gets bumped once per
+  // decided match, so those memos actually recompute instead of returning
+  // a cached value from before the mutation.
+  const [updateTick, setUpdateTick] = useState(0);
+
   const progress = simulator.getProgress();
   const tournament = simulator.getTournament();
 
-  // Get all matches for current stage
+  // Get all matches for current stage that still need to be simulated.
+  // Knockout-stage matches stay in progress.remainingMatches (completed or
+  // not) until the whole stage is done and the next stage is generated, so
+  // this filters out the ones already decided - mirroring how the group
+  // stage's persistent tournament.groups matches are filtered below.
   const allStageMatches = useMemo(() => {
     if (selectedStage === 'group') {
       return tournament.groups.flatMap(g => g.matches).filter(m => !m.completed);
     }
-    return progress.remainingMatches.filter(m => m.stage === selectedStage);
-  }, [selectedStage, tournament, progress]);
+    return progress.remainingMatches.filter(m => m.stage === selectedStage && !m.completed);
+  }, [selectedStage, tournament, progress, updateTick]);
 
   // Get completed matches
   const completedMatches = useMemo(() => {
     return progress.completedMatches.filter(m => m.stage === selectedStage);
-  }, [progress, selectedStage]);
+  }, [progress, selectedStage, updateTick]);
 
   // Group standings
   const groupStandings = useMemo(() => {
     return progress.groupStandings;
-  }, [progress]);
+  }, [progress, updateTick]);
 
   // Knockout teams
   const knockoutTeams = useMemo(() => {
     return progress.knockoutBracket;
-  }, [progress]);
+  }, [progress, updateTick]);
 
   // Select/deselect all matches
   useEffect(() => {
@@ -170,31 +199,144 @@ export default function TournamentPage() {
     }
   }, [selectedStage]);
 
-  // Simulate a single match with full animation
+  // Runs the real 10,000-trial engine to get display stats (win/draw/loss %,
+  // average goals) for a match - the same engine used everywhere else in
+  // this app.
+  const computeMatchStats = useCallback((match: TournamentMatch): MatchStats => {
+    const result = runSimulation({
+      eloA: match.teamA.elo,
+      eloB: match.teamB.elo,
+      homeAdvantage: 0,
+      baselineGoals: 1.3,
+      c: 200,
+      numTrials: 10000
+    });
+    return {
+      winProbability: result.winProbability,
+      drawProbability: result.drawProbability,
+      lossProbability: result.lossProbability,
+      avgGoalsA: result.teamA.avgGoals,
+      avgGoalsB: result.teamB.avgGoals,
+      mostLikelyScore: getMostLikelyScoreline(result),
+      simulationResult: result
+    };
+  }, []);
+
+  // Once every match in a stage is decided, generate the next stage's
+  // matches (real 2026 format: group -> Round of 32 -> Round of 16 ->
+  // Quarterfinal -> Semifinal -> Final + Third Place) and advance the UI to
+  // it. `stageMatches` must be the complete set of matches for `stage`, not
+  // just whichever subset was just simulated.
+  const advanceToNextStage = useCallback((stage: TournamentStage, stageMatches: TournamentMatch[]) => {
+    if (stage === 'group') {
+      const standings = computeGroupStandings(tournament.groups, progress.completedMatches);
+      progress.groupStandings = standings;
+      const qualifiers = advanceFromGroupStage(standings);
+      const seeded = seedKnockoutTeams(qualifiers);
+      progress.knockoutBracket = seeded;
+      progress.remainingMatches = generateKnockoutMatches(seeded, 'round32');
+      progress.currentStage = 'round32';
+      setSelectedStage('round32');
+      return;
+    }
+
+    if (stage === 'semifinal') {
+      const winners = stageMatches.map(m => m.winner).filter((t): t is TournamentTeam => Boolean(t));
+      const losers = stageMatches.map(m => (m.winner === m.teamA ? m.teamB : m.teamA));
+      const finalMatch = generateKnockoutMatches(winners, 'final')[0];
+      const thirdMatch = generateKnockoutMatches(losers, 'thirdplace')[0];
+      progress.remainingMatches = [finalMatch, thirdMatch].filter(Boolean);
+      progress.currentStage = 'final';
+      setSelectedStage('final');
+      return;
+    }
+
+    if (stage === 'final') {
+      progress.currentStage = 'thirdplace';
+      setSelectedStage('thirdplace');
+      return;
+    }
+
+    if (stage === 'thirdplace') {
+      return; // tournament complete
+    }
+
+    // round32 -> round16, round16 -> quarterfinal, quarterfinal -> semifinal
+    const nextStage = getNextStage(stage);
+    if (!nextStage) return;
+    const winners = stageMatches.map(m => m.winner).filter((t): t is TournamentTeam => Boolean(t));
+    progress.remainingMatches = generateKnockoutMatches(winners, nextStage);
+    progress.currentStage = nextStage;
+    setSelectedStage(nextStage);
+  }, [tournament, progress]);
+
+  // Draws the real, decisive outcome for a match (a plain scoreline for
+  // group matches; extra time + a penalty-shootout coin flip for knockout
+  // matches), records it, and advances the bracket once its whole stage
+  // is done.
+  const applyDecidedOutcome = useCallback((match: TournamentMatch, stats: MatchStats) => {
+    const outcome = decideMatchOutcome(match);
+
+    match.completed = true;
+    match.teamAScore = outcome.teamAScore;
+    match.teamBScore = outcome.teamBScore;
+    match.wentToPenalties = outcome.wentToPenalties;
+    match.winner = outcome.winner;
+    match.simulationResult = stats.simulationResult;
+
+    setMatchResults(prev => ({
+      ...prev,
+      [match.id]: {
+        match,
+        result: {
+          winProbability: stats.winProbability,
+          drawProbability: stats.drawProbability,
+          lossProbability: stats.lossProbability,
+          avgGoalsA: stats.avgGoalsA,
+          avgGoalsB: stats.avgGoalsB,
+          // The realized scoreline is the actual bracket result, which is
+          // more relevant here than the trial-averaged "most likely" score.
+          mostLikelyScore: `${outcome.teamAScore}-${outcome.teamBScore}${outcome.wentToPenalties ? ' (pens)' : ''}`
+        }
+      }
+    }));
+
+    progress.completedMatches.push(match);
+
+    const stageMatches = match.stage === 'group'
+      ? tournament.groups.flatMap(g => g.matches)
+      : progress.remainingMatches.filter(m => m.stage === match.stage);
+
+    if (stageMatches.length > 0 && stageMatches.every(m => m.completed)) {
+      advanceToNextStage(match.stage, stageMatches);
+    }
+
+    // progress/tournament were mutated in place above; bump the tick so
+    // every useMemo derived from them (standings, remaining counts, the
+    // stage's match list, ...) recomputes on this render.
+    setUpdateTick(t => t + 1);
+  }, [progress, tournament, advanceToNextStage]);
+
+  // Simulate a single match with full trial-by-trial animation
   const simulateSingleMatch = useCallback(async (match: TournamentMatch) => {
     setActiveMatchId(match.id);
     setIsRunning(true);
-    
+
     const eloA = match.teamA.elo;
     const eloB = match.teamB.elo;
-    const homeAdvantage = 0;
     const baselineGoals = 1.3;
     const c = 200;
-
-    const eloDiff = eloA - eloB + homeAdvantage;
+    const eloDiff = eloA - eloB;
     const expectedGoalsA = Math.max(0, baselineGoals + (eloDiff / c) / 2);
     const expectedGoalsB = Math.max(0, baselineGoals - (eloDiff / c) / 2);
 
     const totalTrials = 10000;
     const batchSize = 100;
     const batches = Math.ceil(totalTrials / batchSize);
-    
+
     let completedTrials = 0;
     let teamAWins = 0, teamADraws = 0, teamALosses = 0;
-    const teamAGoalDistribution = new Map<number, number>();
-    const teamBGoalDistribution = new Map<number, number>();
-    const teamAGoals: number[] = [];
-    const teamBGoals: number[] = [];
+    let totalGoalsA = 0, totalGoalsB = 0;
 
     for (let batch = 0; batch < batches; batch++) {
       if (isPaused) {
@@ -204,311 +346,137 @@ export default function TournamentPage() {
       }
 
       const batchTrials = Math.min(batchSize, totalTrials - completedTrials);
-      
+
       for (let i = 0; i < batchTrials; i++) {
         const goalsA = poissonRandom(expectedGoalsA);
         const goalsB = poissonRandom(expectedGoalsB);
-        
-        teamAGoals.push(goalsA);
-        teamBGoals.push(goalsB);
-        
-        teamAGoalDistribution.set(goalsA, (teamAGoalDistribution.get(goalsA) || 0) + 1);
-        teamBGoalDistribution.set(goalsB, (teamBGoalDistribution.get(goalsB) || 0) + 1);
-        
-        if (goalsA > goalsB) {
-          teamAWins++;
-        } else if (goalsA < goalsB) {
-          teamALosses++;
-        } else {
-          teamADraws++;
-        }
+        totalGoalsA += goalsA;
+        totalGoalsB += goalsB;
+
+        if (goalsA > goalsB) teamAWins++;
+        else if (goalsA < goalsB) teamALosses++;
+        else teamADraws++;
       }
 
       completedTrials += batchTrials;
-      
+
       if (completedTrials < totalTrials && animationSpeed > 0) {
         await new Promise(resolve => setTimeout(resolve, animationSpeed));
       }
     }
 
-    // Calculate final results
-    const winProbability = teamAWins / totalTrials;
-    const drawProbability = teamADraws / totalTrials;
-    const lossProbability = teamALosses / totalTrials;
-    const avgGoalsA = teamAGoals.reduce((sum, g) => sum + g, 0) / totalTrials;
-    const avgGoalsB = teamBGoals.reduce((sum, g) => sum + g, 0) / totalTrials;
-    
-    // Find most likely scoreline
-    let maxProb = 0;
-    let mostLikelyScore = '0-0';
-    for (const [goalsA, countA] of teamAGoalDistribution) {
-      for (const [goalsB, countB] of teamBGoalDistribution) {
-        const jointProb = (countA / totalTrials) * (countB / totalTrials);
-        if (jointProb > maxProb) {
-          maxProb = jointProb;
-          mostLikelyScore = `${goalsA}-${goalsB}`;
-        }
-      }
-    }
-
-    // Update match
-    match.completed = true;
-    match.winner = winProbability > lossProbability ? match.teamA : 
-                   lossProbability > winProbability ? match.teamB : null;
-    
-    match.simulationResult = {
-      trials: totalTrials,
-      teamA: {
-        goals: teamAGoals,
-        totalGoals: teamAGoals.reduce((sum, g) => sum + g, 0),
-        avgGoals: avgGoalsA,
-        goalDistribution: teamAGoalDistribution,
-        wins: teamAWins,
-        draws: teamADraws,
-        losses: teamALosses
-      },
-      teamB: {
-        goals: teamBGoals,
-        totalGoals: teamBGoals.reduce((sum, g) => sum + g, 0),
-        avgGoals: avgGoalsB,
-        goalDistribution: teamBGoalDistribution,
-        wins: teamALosses,
-        draws: teamADraws,
-        losses: teamAWins
-      },
-      winProbability,
-      drawProbability,
-      lossProbability
-    };
-
-    // Store result
-    setMatchResults(prev => ({
-      ...prev,
-      [match.id]: {
-        match,
-        result: {
-          winProbability,
-          drawProbability,
-          lossProbability,
-          avgGoalsA,
-          avgGoalsB,
-          mostLikelyScore
-        }
-      }
-    }));
-
-    // Update progress
-    progress.completedMatches.push(match);
-    progress.remainingMatches = progress.remainingMatches.filter(m => m.id !== match.id);
+    applyDecidedOutcome(match, {
+      winProbability: teamAWins / totalTrials,
+      drawProbability: teamADraws / totalTrials,
+      lossProbability: teamALosses / totalTrials,
+      avgGoalsA: totalGoalsA / totalTrials,
+      avgGoalsB: totalGoalsB / totalTrials,
+      mostLikelyScore: '',
+      simulationResult: { trials: totalTrials, winProbability: teamAWins / totalTrials, drawProbability: teamADraws / totalTrials, lossProbability: teamALosses / totalTrials }
+    });
 
     setActiveMatchId(null);
     setIsRunning(false);
-    
-    return { match, winProbability, drawProbability, lossProbability, avgGoalsA, avgGoalsB, mostLikelyScore };
-  }, [isPaused, isRunning, animationSpeed, progress]);
+  }, [isPaused, isRunning, animationSpeed, applyDecidedOutcome]);
 
-  // Simulate selected matches quickly (batch mode)
-  const simulateSelectedMatches = useCallback(async () => {
-    if (isRunning) return;
-    
-    const matchesToSimulate = selectedMatches.length > 0 
-      ? allStageMatches.filter(m => selectedMatches.includes(m.id))
-      : allStageMatches;
-    
-    if (matchesToSimulate.length === 0) return;
-
+  // Simulate a list of matches with no per-trial animation (fast batch)
+  const runMatchesBatch = useCallback(async (matches: TournamentMatch[]) => {
+    if (matches.length === 0) return;
     setIsRunning(true);
     setIsPaused(false);
 
     try {
-      // Simulate all matches concurrently (or in quick succession)
-      for (const match of matchesToSimulate) {
-        if (isPaused) {
-          while (isPaused && isRunning) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-        
-        setActiveMatchId(match.id);
-        await simulateSingleMatch(match);
-      }
-    } catch (error) {
-      console.error('Simulation error:', error);
-    } finally {
-      setIsRunning(false);
-      setActiveMatchId(null);
-      setSelectedMatches([]);
-      setSelectAll(false);
-    }
-  }, [isRunning, isPaused, selectedMatches, allStageMatches, simulateSingleMatch]);
-
-  // Simulate ALL matches in current stage (fast batch)
-  const simulateAllStageMatches = useCallback(async () => {
-    if (isRunning) return;
-    
-    setIsRunning(true);
-    setIsPaused(false);
-
-    try {
-      // For batch mode, simulate all matches without animation
-      const matchesToSimulate = [...allStageMatches];
-      
-      for (const match of matchesToSimulate) {
+      for (const match of matches) {
         if (isPaused) {
           while (isPaused && isRunning) {
             await new Promise(resolve => setTimeout(resolve, 10));
           }
         }
-        
         setActiveMatchId(match.id);
-        
-        // Fast simulation without animation
-        const eloA = match.teamA.elo;
-        const eloB = match.teamB.elo;
-        const eloDiff = eloA - eloB;
-        const expectedGoalsA = Math.max(0, 1.3 + (eloDiff / 200) / 2);
-        const expectedGoalsB = Math.max(0, 1.3 - (eloDiff / 200) / 2);
-
-        let teamAWins = 0, teamADraws = 0, teamALosses = 0;
-        let totalGoalsA = 0, totalGoalsB = 0;
-        
-        for (let i = 0; i < 10000; i++) {
-          const goalsA = poissonRandom(expectedGoalsA);
-          const goalsB = poissonRandom(expectedGoalsB);
-          totalGoalsA += goalsA;
-          totalGoalsB += goalsB;
-          
-          if (goalsA > goalsB) teamAWins++;
-          else if (goalsA < goalsB) teamALosses++;
-          else teamADraws++;
-        }
-
-        const winProbability = teamAWins / 10000;
-        const drawProbability = teamADraws / 10000;
-        const lossProbability = teamALosses / 10000;
-        const avgGoalsA = totalGoalsA / 10000;
-        const avgGoalsB = totalGoalsB / 10000;
-        
-        // Find most likely scoreline (simplified)
-        const mostLikelyScore = `${Math.round(avgGoalsA)}-${Math.round(avgGoalsB)}`;
-
-        match.completed = true;
-        match.winner = winProbability > lossProbability ? match.teamA : 
-                       lossProbability > winProbability ? match.teamB : null;
-        
-        match.simulationResult = {
-          trials: 10000,
-          teamA: { goals: [], totalGoals: totalGoalsA, avgGoals: avgGoalsA, goalDistribution: new Map(), wins: teamAWins, draws: teamADraws, losses: teamALosses },
-          teamB: { goals: [], totalGoals: totalGoalsB, avgGoals: avgGoalsB, goalDistribution: new Map(), wins: teamALosses, draws: teamADraws, losses: teamAWins },
-          winProbability,
-          drawProbability,
-          lossProbability
-        };
-
-        setMatchResults(prev => ({
-          ...prev,
-          [match.id]: {
-            match,
-            result: { winProbability, drawProbability, lossProbability, avgGoalsA, avgGoalsB, mostLikelyScore }
-          }
-        }));
-
-        progress.completedMatches.push(match);
-        progress.remainingMatches = progress.remainingMatches.filter(m => m.id !== match.id);
+        const stats = computeMatchStats(match);
+        applyDecidedOutcome(match, stats);
       }
     } catch (error) {
       console.error('Batch simulation error:', error);
     } finally {
       setIsRunning(false);
       setActiveMatchId(null);
+      setSelectedMatches([]);
+      setSelectAll(false);
     }
-  }, [isRunning, isPaused, allStageMatches, progress]);
+  }, [isPaused, isRunning, computeMatchStats, applyDecidedOutcome]);
 
-  // Simulate entire tournament from group stage to final
+  // "Simulate Selected": animated one-at-a-time in single mode, fast batch otherwise
+  const simulateSelectedMatches = useCallback(async () => {
+    if (isRunning) return;
+    const matchesToSimulate = selectedMatches.length > 0
+      ? allStageMatches.filter(m => selectedMatches.includes(m.id))
+      : allStageMatches;
+    if (matchesToSimulate.length === 0) return;
+
+    if (simulationMode === 'single') {
+      setIsRunning(true);
+      setIsPaused(false);
+      try {
+        for (const match of matchesToSimulate) {
+          if (isPaused) {
+            while (isPaused && isRunning) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+          await simulateSingleMatch(match);
+        }
+      } finally {
+        setIsRunning(false);
+        setActiveMatchId(null);
+        setSelectedMatches([]);
+        setSelectAll(false);
+      }
+    } else {
+      await runMatchesBatch(matchesToSimulate);
+    }
+  }, [isRunning, isPaused, simulationMode, selectedMatches, allStageMatches, simulateSingleMatch, runMatchesBatch]);
+
+  // Simulate ALL matches in current stage (fast batch)
+  const simulateAllStageMatches = useCallback(async () => {
+    if (isRunning) return;
+    await runMatchesBatch([...allStageMatches]);
+  }, [isRunning, allStageMatches, runMatchesBatch]);
+
+  // Simulate the entire tournament, stage by stage, from the group stage
+  // through the final and third-place playoff.
   const simulateFullTournament = useCallback(async () => {
     if (isRunning) return;
-    
     setIsRunning(true);
     setIsPaused(false);
     setSelectedMatches([]);
     setSelectAll(false);
 
     try {
-      // Get all matches across all stages
-      const allMatches = [...progress.remainingMatches, ...progress.completedMatches.filter(m => !m.completed)];
-      
-      // Group by stage
-      const matchesByStage: Record<TournamentStage, TournamentMatch[]> = {
-        group: [],
-        round16: [],
-        quarterfinal: [],
-        semifinal: [],
-        final: [],
-        thirdplace: []
-      };
-      
-      allMatches.forEach(m => {
-        if (matchesByStage[m.stage]) {
-          matchesByStage[m.stage].push(m);
-        }
-      });
+      // A full 2026 World Cup is 72 group + 31 knockout matches; the guard
+      // just prevents a runaway loop if something upstream misbehaves.
+      for (let guard = 0; guard < 200; guard++) {
+        const stage = progress.currentStage;
+        const stageMatches = stage === 'group'
+          ? tournament.groups.flatMap(g => g.matches).filter(m => !m.completed)
+          : progress.remainingMatches.filter(m => !m.completed);
 
-      // Simulate each stage in order
-      for (const stage of ['group', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'] as TournamentStage[]) {
-        if (matchesByStage[stage].length === 0) continue;
-        
+        if (stageMatches.length === 0) break; // nothing left anywhere - tournament finished
+
         setSelectedStage(stage);
-        
-        for (const match of matchesByStage[stage]) {
+
+        for (const match of stageMatches) {
           if (isPaused) {
             while (isPaused && isRunning) {
               await new Promise(resolve => setTimeout(resolve, 10));
             }
           }
-          
           setActiveMatchId(match.id);
-          
-          // Fast batch simulation
-          const eloA = match.teamA.elo;
-          const eloB = match.teamB.elo;
-          const eloDiff = eloA - eloB;
-          const expectedGoalsA = Math.max(0, 1.3 + (eloDiff / 200) / 2);
-          const expectedGoalsB = Math.max(0, 1.3 - (eloDiff / 200) / 2);
-
-          let teamAWins = 0, teamADraws = 0, teamALosses = 0;
-          
-          for (let i = 0; i < 10000; i++) {
-            const goalsA = poissonRandom(expectedGoalsA);
-            const goalsB = poissonRandom(expectedGoalsB);
-            
-            if (goalsA > goalsB) teamAWins++;
-            else if (goalsA < goalsB) teamALosses++;
-            else teamADraws++;
-          }
-
-          const winProbability = teamAWins / 10000;
-          const drawProbability = teamADraws / 10000;
-          const lossProbability = teamALosses / 10000;
-
-          match.completed = true;
-          match.winner = winProbability > lossProbability ? match.teamA : 
-                         lossProbability > winProbability ? match.teamB : null;
-          
-          match.simulationResult = {
-            trials: 10000,
-            teamA: { goals: [], totalGoals: 0, avgGoals: 0, goalDistribution: new Map(), wins: teamAWins, draws: teamADraws, losses: teamALosses },
-            teamB: { goals: [], totalGoals: 0, avgGoals: 0, goalDistribution: new Map(), wins: teamALosses, draws: teamADraws, losses: teamAWins },
-            winProbability,
-            drawProbability,
-            lossProbability
-          };
-
-          progress.completedMatches.push(match);
-          progress.remainingMatches = progress.remainingMatches.filter(m => m.id !== match.id);
+          const stats = computeMatchStats(match);
+          applyDecidedOutcome(match, stats);
         }
-        
-        // Small delay between stages for UI feedback
-        await new Promise(resolve => setTimeout(resolve, 100));
+
+        await new Promise(resolve => setTimeout(resolve, 100)); // brief pause between stages for UI feedback
       }
     } catch (error) {
       console.error('Full tournament simulation error:', error);
@@ -516,7 +484,7 @@ export default function TournamentPage() {
       setIsRunning(false);
       setActiveMatchId(null);
     }
-  }, [isRunning, isPaused, progress]);
+  }, [isRunning, isPaused, progress, tournament, computeMatchStats, applyDecidedOutcome]);
 
   // Reset tournament
   const resetTournament = useCallback(() => {
@@ -535,11 +503,18 @@ export default function TournamentPage() {
     setIsPaused(prev => !prev);
   }, []);
 
-  // Calculate progress percentage
+  // Calculate progress percentage. remainingMatches holds the *current*
+  // stage's matches (completed or not) until the next stage replaces it, so
+  // only its not-yet-completed matches count as "remaining" here - otherwise
+  // the active stage's matches would be double-counted once they finish.
+  const pendingMatchCount = useMemo(
+    () => progress.remainingMatches.filter(m => !m.completed).length,
+    [progress, updateTick]
+  );
   const progressPercentage = useMemo(() => {
-    const totalMatches = progress.completedMatches.length + progress.remainingMatches.length;
+    const totalMatches = progress.completedMatches.length + pendingMatchCount;
     return totalMatches > 0 ? (progress.completedMatches.length / totalMatches) * 100 : 0;
-  }, [progress]);
+  }, [progress, pendingMatchCount]);
 
   // Format date
   const formattedStartDate = WORLD_CUP_2026_START.toLocaleDateString('en-US', {
@@ -585,7 +560,7 @@ export default function TournamentPage() {
               Stage: {STAGE_LABELS[selectedStage]}
             </span>
             <span className="text-sm font-mono text-muted-foreground">
-              {progress.completedMatches.length} / {progress.completedMatches.length + progress.remainingMatches.length} matches
+              {progress.completedMatches.length} / {progress.completedMatches.length + pendingMatchCount} matches
             </span>
           </div>
           <div className="h-2 rounded-full bg-secondary overflow-hidden">
@@ -596,9 +571,9 @@ export default function TournamentPage() {
           </div>
           
           <div className="flex justify-between mt-4 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            {['group', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'].map((stage) => (
+            {TOURNAMENT_STAGE_ORDER.map((stage) => (
               <div key={stage} className="flex flex-col items-center gap-1">
-                <div className={`w-2 h-2 rounded-full ${selectedStage === stage ? 'bg-primary' : stage === 'group' && selectedStage !== 'group' ? 'bg-green-500' : 'bg-muted'}`} />
+                <div className={`w-2 h-2 rounded-full ${selectedStage === stage ? 'bg-primary' : TOURNAMENT_STAGE_ORDER.indexOf(stage) < TOURNAMENT_STAGE_ORDER.indexOf(selectedStage) ? 'bg-green-500' : 'bg-muted'}`} />
                 <span className={selectedStage === stage ? 'text-foreground' : 'text-muted-foreground'}>
                   {STAGE_LABELS[stage as TournamentStage]}
                 </span>
@@ -873,7 +848,7 @@ export default function TournamentPage() {
                     <SelectValue placeholder="Select stage" />
                   </SelectTrigger>
                   <SelectContent>
-                    {['group', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'].map((stage) => (
+                    {TOURNAMENT_STAGE_ORDER.map((stage) => (
                       <SelectItem key={stage} value={stage}>
                         {STAGE_LABELS[stage as TournamentStage]}
                       </SelectItem>

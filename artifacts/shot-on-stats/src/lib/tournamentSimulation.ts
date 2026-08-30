@@ -1,11 +1,13 @@
 // Shot on Stats - Tournament Simulation Engine for 2026 World Cup
 import { runSimulation, type SimulationConfig, type SimulationResult } from './simulation';
-import { 
-  TournamentTeam, 
-  TournamentMatch, 
-  TournamentStructure, 
+import { computeGroupStandings, advanceFromGroupStage, seedKnockoutTeams, decideMatchOutcome } from './tournamentAdvancement';
+import {
+  TournamentTeam,
+  TournamentMatch,
+  TournamentStructure,
   TournamentStage,
   WORLD_CUP_2026,
+  TOURNAMENT_STAGE_ORDER,
   generateGroupMatches,
   generateKnockoutMatches,
   getNextStage,
@@ -78,21 +80,23 @@ class TournamentSimulator {
       }
     });
 
-    let winner: TournamentTeam | null = null;
-    if (result.winProbability > result.drawProbability && result.winProbability > result.lossProbability) {
-      winner = match.teamA;
-    } else if (result.lossProbability > result.drawProbability) {
-      winner = match.teamB;
-    }
+    // The 10,000-trial result above reports probabilities and a
+    // distribution; the bracket itself needs one concrete result, drawn
+    // from the same model, so the tournament actually has upsets rather
+    // than always advancing whichever team is favored.
+    const outcome = decideMatchOutcome(match);
 
     match.completed = true;
-    match.winner = winner;
+    match.teamAScore = outcome.teamAScore;
+    match.teamBScore = outcome.teamBScore;
+    match.wentToPenalties = outcome.wentToPenalties;
+    match.winner = outcome.winner;
     match.simulationResult = result;
 
     return {
       match,
       result,
-      winner
+      winner: outcome.winner
     };
   }
 
@@ -117,9 +121,14 @@ class TournamentSimulator {
 
     if (currentStage === 'group') {
       this.updateGroupStandings();
-      const knockoutTeams = this.advanceFromGroupStage();
-      this.progress.knockoutBracket = knockoutTeams;
-      const round16Matches = generateKnockoutMatches(knockoutTeams, 'round16');
+      const qualifiers = advanceFromGroupStage(this.progress.groupStandings);
+      const seeded = seedKnockoutTeams(qualifiers);
+      this.progress.knockoutBracket = seeded;
+      this.progress.remainingMatches = generateKnockoutMatches(seeded, 'round32');
+      this.progress.currentStage = 'round32';
+    } else if (currentStage === 'round32') {
+      const winners = stageResults.map(r => r.winner).filter(Boolean) as TournamentTeam[];
+      const round16Matches = generateKnockoutMatches(winners, 'round16');
       this.progress.remainingMatches = round16Matches;
       this.progress.currentStage = 'round16';
     } else if (currentStage === 'round16') {
@@ -169,74 +178,7 @@ class TournamentSimulator {
   }
 
   private updateGroupStandings(): void {
-    const standings: Record<string, TournamentTeam[]> = {};
-
-    for (const group of this.tournament.groups) {
-      const groupTeams = [...group.teams];
-      const groupMatches = this.progress.completedMatches.filter(m =>
-        group.teams.some(t => t.id === m.teamA.id || t.id === m.teamB.id)
-      );
-
-      for (const team of groupTeams) {
-        team.points = 0;
-        team.wins = 0;
-        team.draws = 0;
-        team.losses = 0;
-        team.goalsFor = 0;
-        team.goalsAgainst = 0;
-      }
-
-      for (const match of groupMatches) {
-        if (match.winner) {
-          const winningTeam = groupTeams.find(t => t.id === match.winner!.id);
-          const losingTeam = groupTeams.find(t =>
-            t.id === (match.winner!.id === match.teamA.id ? match.teamB.id : match.teamA.id)
-          );
-
-          if (winningTeam) {
-            winningTeam.points = (winningTeam.points || 0) + 3;
-            winningTeam.wins = (winningTeam.wins || 0) + 1;
-          }
-          if (losingTeam) {
-            losingTeam.losses = (losingTeam.losses || 0) + 1;
-          }
-        } else {
-          const teamA = groupTeams.find(t => t.id === match.teamA.id);
-          const teamB = groupTeams.find(t => t.id === match.teamB.id);
-
-          if (teamA) {
-            teamA.points = (teamA.points || 0) + 1;
-            teamA.draws = (teamA.draws || 0) + 1;
-          }
-          if (teamB) {
-            teamB.points = (teamB.points || 0) + 1;
-            teamB.draws = (teamB.draws || 0) + 1;
-          }
-        }
-      }
-
-      groupTeams.sort((a, b) => (b.points || 0) - (a.points || 0));
-      standings[group.name] = groupTeams;
-    }
-
-    this.progress.groupStandings = standings;
-  }
-
-  private advanceFromGroupStage(): TournamentTeam[] {
-    const advancedTeams: TournamentTeam[] = [];
-
-    for (const group of this.tournament.groups) {
-      const groupStandings = this.progress.groupStandings[group.name] || [];
-      // Top 2 teams from each group advance
-      const topTwo = groupStandings.slice(0, 2);
-      advancedTeams.push(...topTwo);
-    }
-
-    // For 2026 format: 48 teams, 12 groups, top 2 from each group = 24 teams
-    // Plus 8 best third-place teams = 32 teams for Round of 32
-    // For demo simplicity, we'll just use top 2 from each group
-    // Since we have 12 groups * 2 = 24 teams, we'll take first 16 for Round of 16
-    return advancedTeams.slice(0, 16);
+    this.progress.groupStandings = computeGroupStandings(this.tournament.groups, this.progress.completedMatches);
   }
 
   async simulateTournament(
@@ -260,7 +202,8 @@ class TournamentSimulator {
     this.progress.currentStage = stage;
 
     if (stage !== 'group') {
-      const teamsForStage = stage === 'round16' ? this.progress.knockoutBracket :
+      const teamsForStage = stage === 'round32' ? this.progress.knockoutBracket :
+                           stage === 'round16' ? this.progress.knockoutBracket.slice(0, 16) :
                            stage === 'quarterfinal' ? this.progress.knockoutBracket.slice(0, 8) :
                            stage === 'semifinal' ? this.progress.knockoutBracket.slice(0, 4) :
                            this.progress.knockoutBracket.slice(0, 2);
@@ -286,7 +229,7 @@ class TournamentSimulator {
   }
 
   getAllStages(): TournamentStage[] {
-    return ['group', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'];
+    return TOURNAMENT_STAGE_ORDER;
   }
 
   reset(): void {

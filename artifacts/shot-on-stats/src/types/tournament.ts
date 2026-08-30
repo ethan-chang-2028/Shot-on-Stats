@@ -1,6 +1,6 @@
 // Shot on Stats - Tournament Types for 2026 World Cup Simulation
 
-export type TournamentStage = 'group' | 'round16' | 'quarterfinal' | 'semifinal' | 'final' | 'thirdplace';
+export type TournamentStage = 'group' | 'round32' | 'round16' | 'quarterfinal' | 'semifinal' | 'final' | 'thirdplace';
 
 export interface TournamentTeam {
   id: string;
@@ -22,6 +22,7 @@ export interface TournamentMatch {
   teamB: TournamentTeam;
   teamAScore?: number;
   teamBScore?: number;
+  wentToPenalties?: boolean;
   completed?: boolean;
   winner?: TournamentTeam | null;
   simulationResult?: any;
@@ -191,12 +192,19 @@ export const WORLD_CUP_2026: TournamentStructure = {
 // Stage labels for display
 export const STAGE_LABELS: Record<TournamentStage, string> = {
   group: 'Group Stage',
+  round32: 'Round of 32',
   round16: 'Round of 16',
   quarterfinal: 'Quarterfinals',
   semifinal: 'Semifinals',
   final: 'Final',
   thirdplace: 'Third Place Playoff'
 };
+
+// Full 2026 format order: group stage, then a 32-team knockout bracket
+// (top 2 of each of the 12 groups plus the best 8 third-place teams).
+export const TOURNAMENT_STAGE_ORDER: TournamentStage[] = [
+  'group', 'round32', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'
+];
 
 // Generate group stage matches for each group
 export function generateGroupMatches(group: TournamentGroup): TournamentMatch[] {
@@ -219,96 +227,49 @@ export function generateGroupMatches(group: TournamentGroup): TournamentMatch[] 
   return matches;
 }
 
-// Generate knockout stage matches
+// Generate knockout stage matches by pairing consecutive teams
+// (teams[0] vs teams[1], teams[2] vs teams[3], ...) - callers that need a
+// seeded bracket (e.g. round32) should order `teams` accordingly first,
+// such as via seedKnockoutTeams in lib/tournamentAdvancement.ts.
 export function generateKnockoutMatches(teams: TournamentTeam[], stage: TournamentStage): TournamentMatch[] {
   const matches: TournamentMatch[] = [];
-  
-  // For Round of 32 (since 2026 has 48 teams, top 2 from each of 12 groups = 24 teams + 8 best 3rd place)
-  // For demo purposes, we'll use top 2 from each group = 24 teams for Round of 32
-  if (stage === 'round16') {
-    // In 2026 format: Round of 32 first, then Round of 16
-    // But for simplicity, we'll simulate as Round of 16 with 16 teams
-    // (taking top 2 from 8 groups = 16 teams)
-    for (let i = 0; i < Math.min(teams.length, 16); i += 2) {
-      if (i + 1 < teams.length) {
-        matches.push({
-          id: `r16-${i}-${i+1}`,
-          stage: 'round16',
-          teamA: teams[i],
-          teamB: teams[i + 1],
-          completed: false
-        });
-      }
+
+  if (stage === 'round32' || stage === 'round16' || stage === 'quarterfinal' || stage === 'semifinal') {
+    const prefix = stage === 'round32' ? 'r32' : stage === 'round16' ? 'r16' : stage === 'quarterfinal' ? 'qf' : 'sf';
+    for (let i = 0; i + 1 < teams.length; i += 2) {
+      matches.push({
+        id: `${prefix}-${i}-${i + 1}`,
+        stage,
+        teamA: teams[i],
+        teamB: teams[i + 1],
+        completed: false
+      });
     }
-  }
-  // For Quarterfinals: 8 matches (16 teams)
-  else if (stage === 'quarterfinal') {
-    for (let i = 0; i < Math.min(teams.length, 8); i += 2) {
-      if (i + 1 < teams.length) {
-        matches.push({
-          id: `qf-${i}-${i+1}`,
-          stage: 'quarterfinal',
-          teamA: teams[i],
-          teamB: teams[i + 1],
-          completed: false
-        });
-      }
-    }
-  }
-  // For Semifinals: 2 matches (4 teams)
-  else if (stage === 'semifinal') {
-    for (let i = 0; i < Math.min(teams.length, 4); i += 2) {
-      if (i + 1 < teams.length) {
-        matches.push({
-          id: `sf-${i}-${i+1}`,
-          stage: 'semifinal',
-          teamA: teams[i],
-          teamB: teams[i + 1],
-          completed: false
-        });
-      }
-    }
-  }
-  // For Final: 1 match (2 teams)
-  else if (stage === 'final') {
+  } else if (stage === 'final' || stage === 'thirdplace') {
     if (teams.length >= 2) {
       matches.push({
-        id: 'final',
-        stage: 'final',
+        id: stage,
+        stage,
         teamA: teams[0],
         teamB: teams[1],
         completed: false
       });
     }
   }
-  // For Third Place: 1 match (2 teams)
-  else if (stage === 'thirdplace') {
-    if (teams.length >= 2) {
-      matches.push({
-        id: 'thirdplace',
-        stage: 'thirdplace',
-        teamA: teams[0],
-        teamB: teams[1],
-        completed: false
-      });
-    }
-  }
-  
+
   return matches;
 }
 
 // Get next stage after current
 export function getNextStage(current: TournamentStage): TournamentStage | null {
-  const stages: TournamentStage[] = ['group', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'];
-  const currentIndex = stages.indexOf(current);
-  return currentIndex < stages.length - 1 ? stages[currentIndex + 1] : null;
+  const currentIndex = TOURNAMENT_STAGE_ORDER.indexOf(current);
+  return currentIndex >= 0 && currentIndex < TOURNAMENT_STAGE_ORDER.length - 1 ? TOURNAMENT_STAGE_ORDER[currentIndex + 1] : null;
 }
 
 // Get previous stage
 export function getPreviousStage(current: TournamentStage): TournamentStage | null {
-  const stages: TournamentStage[] = ['group', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'];
-  const currentIndex = stages.indexOf(current);
-  return currentIndex > 0 ? stages[currentIndex - 1] : null;
+  const currentIndex = TOURNAMENT_STAGE_ORDER.indexOf(current);
+  return currentIndex > 0 ? TOURNAMENT_STAGE_ORDER[currentIndex - 1] : null;
 }
 
 // Helper to get all groups
