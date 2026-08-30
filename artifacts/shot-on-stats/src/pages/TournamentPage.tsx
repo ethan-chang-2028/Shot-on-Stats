@@ -76,7 +76,7 @@ const SIM_STAGE_RANK: Record<TournamentStage, number> = {
 // getRealOutcome where the stages overlap, so the two can be compared
 // directly, plus two labels (Round of 32 exit / Eliminated in Group Stage)
 // for outcomes the real dataset doesn't track at all.
-function getSimulatedOutcome(teamName: string, matches: TournamentMatch[]): TeamOutcomeLabel | 'Round of 32 exit' | 'Eliminated in Group Stage' | 'Not simulated' {
+function getSimulatedOutcome(teamName: string, matches: TournamentMatch[]): TeamOutcomeLabel | 'Eliminated in Group Stage' | 'Not simulated' {
   const teamMatches = matches.filter(m => m.teamA.name === teamName || m.teamB.name === teamName);
   if (teamMatches.length === 0) return 'Not simulated';
 
@@ -1006,11 +1006,12 @@ export default function TournamentPage() {
                   Simulation vs. the Real 2026 World Cup
                 </CardTitle>
                 <CardDescription>
-                  How far each team actually went in July 2026, vs. how far they've gone in this run
+                  Same 48 teams, same real 2026 groups — how far each team actually went in July 2026, vs. how
+                  far they've gone in this independently-simulated run
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 mb-6">
+                <div className="grid gap-4 md:grid-cols-3 mb-6">
                   <div className="p-4 rounded-lg border border-border bg-secondary/50 text-center">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Your Simulated Champion</div>
                     <div className="text-2xl font-bold text-primary">{simulatedChampion ?? 'Not decided yet'}</div>
@@ -1018,6 +1019,12 @@ export default function TournamentPage() {
                   <div className="p-4 rounded-lg border border-border bg-secondary/50 text-center">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Real 2026 Champion</div>
                     <div className="text-2xl font-bold">Spain</div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-border bg-secondary/50 text-center">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Same Finish As Reality</div>
+                    <div className="text-2xl font-bold">
+                      {realVsSimulated.filter(r => r.simulated === r.real).length} / {realVsSimulated.length}
+                    </div>
                   </div>
                 </div>
 
@@ -1053,9 +1060,10 @@ export default function TournamentPage() {
                   </table>
                 </div>
                 <p className="text-xs text-muted-foreground mt-4">
-                  Only the 9 teams both the real 2026 knockout stage and this demo's fictional bracket have in
-                  common are shown — the group draw here is a hypothetical stand-in, not the actual 2026 groups,
-                  so exact bracket paths won't line up even when a team's ultimate finish does.
+                  These are the real 2026 groups and the 32 teams that actually reached the real Round of 32 (the
+                  other 16 real teams were eliminated in the group stage, which isn't reconstructed here). Each
+                  match in this simulation is still an independent random draw, so the exact path a team takes
+                  to its finish won't match reality even in a run where the finish itself does.
                 </p>
               </CardContent>
             </Card>
