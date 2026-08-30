@@ -46,10 +46,10 @@ export default function HomePage() {
           </p>
           
           <p className="max-w-2xl mx-auto text-sm leading-6 text-muted-foreground">
-            <strong className="text-foreground">Classroom Demo:</strong> 
-            Starting from the {formattedDate} World Cup group stage,
-            this interactive demonstration shows how our Monte Carlo simulation engine 
-            predicts match outcomes with complete transparency.
+            <strong className="text-foreground">Working prototype:</strong>{' '}
+            A real Elo → Poisson → Monte Carlo simulation engine, running on the actual 48 teams
+            and 12 groups from the {formattedDate} World Cup — and graded directly against what
+            really happened, match by match.
           </p>
           
           <div className="flex justify-center gap-4 mt-8">
@@ -110,12 +110,12 @@ export default function HomePage() {
                 Demo Overview
               </CardTitle>
               <CardDescription>
-                What you're about to see in this classroom presentation
+                Four things you can actually click on and try right now
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-3">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <div className="text-center p-4">
                     <div className="flex justify-center mb-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
@@ -124,24 +124,37 @@ export default function HomePage() {
                     </div>
                     <h3 className="font-semibold mb-2">The Core Simulation</h3>
                     <p className="text-sm text-muted-foreground">
-                      Watch 10,000 Monte Carlo trials run live using Poisson distribution, 
+                      Watch 10,000 Monte Carlo trials run live using Poisson distribution,
                       converting Elo ratings to expected goals.
                     </p>
                   </div>
-              
+
                   <div className="text-center p-4">
                     <div className="flex justify-center mb-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/50">
                         <Trophy className="h-6 w-6 text-foreground" />
                       </div>
                     </div>
-                    <h3 className="font-semibold mb-2">2026 World Cup</h3>
+                    <h3 className="font-semibold mb-2">The Real 2026 World Cup</h3>
                     <p className="text-sm text-muted-foreground">
-                      Full tournament simulation from group stage to final, 
-                      with 48 teams across 12 groups.
+                      Full tournament simulation with the actual 48 teams and 12 groups from the
+                      real tournament, group stage to final.
                     </p>
                   </div>
-                  
+
+                  <div className="text-center p-4">
+                    <div className="flex justify-center mb-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/50">
+                        <ClipboardCheck className="h-6 w-6 text-foreground" />
+                      </div>
+                    </div>
+                    <h3 className="font-semibold mb-2">Graded Against Reality</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Every simulated team's finish is compared live to what actually happened
+                      in July 2026 — champion included.
+                    </p>
+                  </div>
+
                   <div className="text-center p-4">
                     <div className="flex justify-center mb-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/50">
@@ -150,7 +163,7 @@ export default function HomePage() {
                     </div>
                     <h3 className="font-semibold mb-2">Interactive Controls</h3>
                     <p className="text-sm text-muted-foreground">
-                      Simulate individual matches, entire stages, or the full tournament. 
+                      Simulate individual matches, entire stages, or the full tournament.
                       Pause, resume, or adjust speed.
                     </p>
                   </div>
@@ -278,7 +291,9 @@ export default function HomePage() {
                 Solution Description
               </CardTitle>
               <CardDescription>
-                How users interact with Shot on Stats
+                The full product vision for a public site — this prototype proves out steps 2–3 (the
+                simulation engine itself) via the World Cup demo; the Premier League fixture list, AI
+                explanations, player projections, sandbox and paid tier below are the roadmap
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -312,9 +327,9 @@ export default function HomePage() {
                     optional AI explanation on demand.
                   </li>
                   <li className="pl-1">
-                    <strong>Free users</strong> get 3 matches/week of full detail (ads shown); 
-                    this cap is not required for the classroom demo but exists in the code as 
-                    a toggleable flag.
+                    <strong>Free users</strong> get 3 matches/week of full detail (ads shown) —
+                    a business-model decision for the eventual public site, not something this
+                    prototype needs to enforce yet.
                   </li>
                 </ol>
               </div>
