@@ -140,3 +140,46 @@ export const WORLD_CUP_2026_RESULTS: RealMatchResult[] = [
     source: 'FIFA match centre / CBS News / NPR',
   },
 ];
+
+// Every team this dataset has a real, tracked result for - the only teams a
+// "simulation vs. reality" comparison can honestly be drawn for, since the
+// real dataset only covers the Round of 16 onward (Norway isn't in the
+// fictional 48-team bracket used elsewhere in this demo, so it's excluded).
+export const REAL_2026_TRACKED_TEAMS = [
+  'Spain', 'Argentina', 'France', 'England', 'Portugal', 'Belgium', 'Switzerland', 'Morocco', 'Canada',
+];
+
+export type TeamOutcomeLabel =
+  | 'Champion'
+  | 'Runner-up'
+  | 'Third Place'
+  | 'Fourth Place'
+  | 'Lost in Semifinal'
+  | 'Quarterfinal exit'
+  | 'Round of 16 exit'
+  | 'Not tracked';
+
+const STAGE_RANK: Record<string, number> = {
+  'Round of 16': 1,
+  'Quarterfinal': 2,
+  'Semifinal': 3,
+  'Third Place': 4,
+  'Final': 4,
+};
+
+// Furthest real stage a team reached, derived from the match list itself
+// (rather than hardcoded per team) so it stays correct if results are added.
+export function getRealOutcome(teamName: string): TeamOutcomeLabel {
+  const matches = WORLD_CUP_2026_RESULTS.filter((m) => m.teamA.name === teamName || m.teamB.name === teamName);
+  if (matches.length === 0) return 'Not tracked';
+
+  const furthest = matches.reduce((best, m) => (STAGE_RANK[m.stage] > STAGE_RANK[best.stage] ? m : best));
+  const isTeamA = furthest.teamA.name === teamName;
+  const won = isTeamA ? furthest.scoreA > furthest.scoreB : furthest.scoreB > furthest.scoreA;
+
+  if (furthest.stage === 'Final') return won ? 'Champion' : 'Runner-up';
+  if (furthest.stage === 'Third Place') return won ? 'Third Place' : 'Fourth Place';
+  if (furthest.stage === 'Semifinal') return 'Lost in Semifinal';
+  if (furthest.stage === 'Quarterfinal') return 'Quarterfinal exit';
+  return 'Round of 16 exit';
+}
