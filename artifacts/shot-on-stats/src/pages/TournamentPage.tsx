@@ -45,6 +45,7 @@ import {
   generateGroupMatches,
   generateKnockoutMatches
 } from '@/types/tournament';
+import { REAL_2026_TRACKED_TEAMS, getRealOutcome, type TeamOutcomeLabel } from '@/data/worldCup2026Results';
 
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
@@ -62,6 +63,34 @@ function poissonRandom(lambda: number): number {
     p *= Math.random();
   } while (p > L);
   return k - 1;
+}
+
+// Same ranking idea as getRealOutcome (src/data/worldCup2026Results.ts),
+// but over this simulation's own stage set, which goes one round deeper
+// (Round of 32) than the real dataset tracks.
+const SIM_STAGE_RANK: Record<TournamentStage, number> = {
+  group: 0, round32: 1, round16: 2, quarterfinal: 3, semifinal: 4, final: 5, thirdplace: 5
+};
+
+// Furthest stage a team reached in *this* simulated run - same label set as
+// getRealOutcome where the stages overlap, so the two can be compared
+// directly, plus two labels (Round of 32 exit / Eliminated in Group Stage)
+// for outcomes the real dataset doesn't track at all.
+function getSimulatedOutcome(teamName: string, matches: TournamentMatch[]): TeamOutcomeLabel | 'Round of 32 exit' | 'Eliminated in Group Stage' | 'Not simulated' {
+  const teamMatches = matches.filter(m => m.teamA.name === teamName || m.teamB.name === teamName);
+  if (teamMatches.length === 0) return 'Not simulated';
+
+  const furthest = teamMatches.reduce((best, m) => (SIM_STAGE_RANK[m.stage] > SIM_STAGE_RANK[best.stage] ? m : best));
+  const isTeamA = furthest.teamA.name === teamName;
+  const won = isTeamA ? furthest.winner?.id === furthest.teamA.id : furthest.winner?.id === furthest.teamB.id;
+
+  if (furthest.stage === 'final') return won ? 'Champion' : 'Runner-up';
+  if (furthest.stage === 'thirdplace') return won ? 'Third Place' : 'Fourth Place';
+  if (furthest.stage === 'semifinal') return 'Lost in Semifinal';
+  if (furthest.stage === 'quarterfinal') return 'Quarterfinal exit';
+  if (furthest.stage === 'round16') return 'Round of 16 exit';
+  if (furthest.stage === 'round32') return 'Round of 32 exit';
+  return 'Eliminated in Group Stage';
 }
 
 interface SimulationProgress {
@@ -166,6 +195,22 @@ export default function TournamentPage() {
   // Knockout teams
   const knockoutTeams = useMemo(() => {
     return progress.knockoutBracket;
+  }, [progress, updateTick]);
+
+  // For every team this demo has a real 2026 result for, compare how far
+  // they actually went to how far they've gone (so far) in this simulated
+  // run. Updates live as matches are decided.
+  const realVsSimulated = useMemo(() => {
+    return REAL_2026_TRACKED_TEAMS.map(name => ({
+      name,
+      real: getRealOutcome(name),
+      simulated: getSimulatedOutcome(name, progress.completedMatches)
+    }));
+  }, [progress, updateTick]);
+
+  const simulatedChampion = useMemo(() => {
+    const finalMatch = progress.completedMatches.find(m => m.stage === 'final');
+    return finalMatch?.winner?.name ?? null;
   }, [progress, updateTick]);
 
   // Select/deselect all matches
@@ -946,6 +991,72 @@ export default function TournamentPage() {
                     </p>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* Simulation vs. Real 2026 World Cup */}
+        {progress.completedMatches.length > 0 && (
+          <section className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  Simulation vs. the Real 2026 World Cup
+                </CardTitle>
+                <CardDescription>
+                  How far each team actually went in July 2026, vs. how far they've gone in this run
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 mb-6">
+                  <div className="p-4 rounded-lg border border-border bg-secondary/50 text-center">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Your Simulated Champion</div>
+                    <div className="text-2xl font-bold text-primary">{simulatedChampion ?? 'Not decided yet'}</div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-border bg-secondary/50 text-center">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Real 2026 Champion</div>
+                    <div className="text-2xl font-bold">Spain</div>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        <th className="py-2 pr-4 font-medium">Team</th>
+                        <th className="py-2 pr-4 font-medium">This Simulation</th>
+                        <th className="py-2 pr-4 font-medium">Real 2026 Result</th>
+                        <th className="py-2 font-medium">Match?</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {realVsSimulated.map((row) => {
+                        const matches = row.simulated === row.real;
+                        return (
+                          <tr key={row.name} className="border-b border-border/60">
+                            <td className="py-2 pr-4 font-medium whitespace-nowrap">{row.name}</td>
+                            <td className="py-2 pr-4 whitespace-nowrap">{row.simulated}</td>
+                            <td className="py-2 pr-4 whitespace-nowrap text-muted-foreground">{row.real}</td>
+                            <td className="py-2">
+                              {matches ? (
+                                <span className="text-green-500 font-bold text-xs">✓ Same</span>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Only the 9 teams both the real 2026 knockout stage and this demo's fictional bracket have in
+                  common are shown — the group draw here is a hypothetical stand-in, not the actual 2026 groups,
+                  so exact bracket paths won't line up even when a team's ultimate finish does.
+                </p>
               </CardContent>
             </Card>
           </section>
