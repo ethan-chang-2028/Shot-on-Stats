@@ -251,4 +251,40 @@ export function getMostLikelyScoreline(result: SimulationResult): string {
   return mostLikelyScore;
 }
 
+// Draw ONE realized scoreline from the same Elo -> expected-goals model used
+// by the 10,000-trial engine above. The functions above report a *trial*
+// average / distribution; this is what's needed to actually build a
+// tournament bracket, where every match needs one concrete result.
+export function drawMatchOutcome(config: SimulationConfig): { goalsA: number; goalsB: number } {
+  const { eloA, eloB, homeAdvantage, baselineGoals = 1.3, c = 200 } = config;
+  const eloDiff = eloA - eloB + homeAdvantage;
+  const { home, away } = calculateExpectedGoals(eloDiff, baselineGoals, c);
+  return { goalsA: poissonRandom(home), goalsB: poissonRandom(away) };
+}
+
+export interface KnockoutOutcome {
+  goalsA: number;
+  goalsB: number;
+  wentToPenalties: boolean;
+  winner: 'A' | 'B';
+}
+
+// A knockout match must produce a winner: extra time (roughly a third of a
+// full match's worth of extra chances), then a penalty shootout modeled as
+// a near coin-flip with only a small Elo tilt — shootouts are famously close
+// to random regardless of which side dominated open play.
+export function drawKnockoutOutcome(config: SimulationConfig): KnockoutOutcome {
+  let { goalsA, goalsB } = drawMatchOutcome(config);
+  if (goalsA === goalsB) {
+    const extraTime = drawMatchOutcome({ ...config, baselineGoals: (config.baselineGoals ?? 1.3) / 3 });
+    goalsA += extraTime.goalsA;
+    goalsB += extraTime.goalsB;
+  }
+  if (goalsA === goalsB) {
+    const shootoutEdge = 0.5 + Math.max(-0.1, Math.min(0.1, (config.eloA - config.eloB) / 4000));
+    return { goalsA, goalsB, wentToPenalties: true, winner: Math.random() < shootoutEdge ? 'A' : 'B' };
+  }
+  return { goalsA, goalsB, wentToPenalties: false, winner: goalsA > goalsB ? 'A' : 'B' };
+}
+
 export type { SimulationConfig, SimulationResult, ProgressUpdate };
