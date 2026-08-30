@@ -45,8 +45,13 @@ export interface TournamentStructure {
   thirdPlaceMatch?: TournamentMatch;
 }
 
-// 2026 World Cup structure - Official groups as announced by FIFA
-// Based on actual 2026 World Cup group assignments
+// The real 2026 World Cup group draw (48 teams, 12 groups of 4). Elo ratings
+// are approximate pre-tournament estimates (same illustrative approach used
+// throughout this demo, not official ClubElo figures) - they're what the
+// simulation runs on, but the group assignments and the real results in
+// src/data/worldCup2026Results.ts are the actual 2026 draw and outcomes, so
+// the "Simulation vs. Real 2026 World Cup" comparison on the tournament page
+// is comparing the same 48 teams reality did, not a fictional stand-in.
 export const WORLD_CUP_2026: TournamentStructure = {
   name: 'FIFA World Cup 2026',
   year: 2026,
@@ -58,9 +63,9 @@ export const WORLD_CUP_2026: TournamentStructure = {
       name: 'Group A',
       teams: [
         { id: 'mexico', name: 'Mexico', elo: 1890, group: 'A' },
-        { id: 'netherlands', name: 'Netherlands', elo: 2050, group: 'A' },
-        { id: 'ecuador', name: 'Ecuador', elo: 1850, group: 'A' },
-        { id: 'new_zealand', name: 'New Zealand', elo: 1650, group: 'A' }
+        { id: 'south_africa', name: 'South Africa', elo: 1650, group: 'A' },
+        { id: 'korea_republic', name: 'Korea Republic', elo: 1830, group: 'A' },
+        { id: 'czechia', name: 'Czechia', elo: 1850, group: 'A' }
       ],
       matches: []
     },
@@ -68,10 +73,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group B',
       teams: [
-        { id: 'spain', name: 'Spain', elo: 2050, group: 'B' },
-        { id: 'italy', name: 'Italy', elo: 2020, group: 'B' },
-        { id: 'croatia', name: 'Croatia', elo: 1990, group: 'B' },
-        { id: 'canada', name: 'Canada', elo: 1750, group: 'B' }
+        { id: 'canada', name: 'Canada', elo: 1750, group: 'B' },
+        { id: 'bosnia_and_herzegovina', name: 'Bosnia and Herzegovina', elo: 1800, group: 'B' },
+        { id: 'qatar', name: 'Qatar', elo: 1750, group: 'B' },
+        { id: 'switzerland', name: 'Switzerland', elo: 1970, group: 'B' }
       ],
       matches: []
     },
@@ -79,10 +84,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group C',
       teams: [
-        { id: 'england', name: 'England', elo: 2080, group: 'C' },
-        { id: 'denmark', name: 'Denmark', elo: 1980, group: 'C' },
-        { id: 'serbia', name: 'Serbia', elo: 1860, group: 'C' },
-        { id: 'slovenia', name: 'Slovenia', elo: 1810, group: 'C' }
+        { id: 'brazil', name: 'Brazil', elo: 2150, group: 'C' },
+        { id: 'morocco', name: 'Morocco', elo: 1860, group: 'C' },
+        { id: 'haiti', name: 'Haiti', elo: 1550, group: 'C' },
+        { id: 'scotland', name: 'Scotland', elo: 1780, group: 'C' }
       ],
       matches: []
     },
@@ -90,10 +95,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group D',
       teams: [
-        { id: 'brazil', name: 'Brazil', elo: 2150, group: 'D' },
-        { id: 'france', name: 'France', elo: 2120, group: 'D' },
-        { id: 'colombia', name: 'Colombia', elo: 1970, group: 'D' },
-        { id: 'united_arab_emirates', name: 'United Arab Emirates', elo: 1700, group: 'D' }
+        { id: 'usa', name: 'USA', elo: 1820, group: 'D' },
+        { id: 'paraguay', name: 'Paraguay', elo: 1780, group: 'D' },
+        { id: 'australia', name: 'Australia', elo: 1740, group: 'D' },
+        { id: 'turkiye', name: 'Turkiye', elo: 1900, group: 'D' }
       ],
       matches: []
     },
@@ -102,9 +107,9 @@ export const WORLD_CUP_2026: TournamentStructure = {
       name: 'Group E',
       teams: [
         { id: 'germany', name: 'Germany', elo: 2030, group: 'E' },
-        { id: 'belgium', name: 'Belgium', elo: 2040, group: 'E' },
-        { id: 'ukraine', name: 'Ukraine', elo: 1880, group: 'E' },
-        { id: 'usa', name: 'USA', elo: 1820, group: 'E' }
+        { id: 'curacao', name: 'Curacao', elo: 1550, group: 'E' },
+        { id: 'ivory_coast', name: 'Ivory Coast', elo: 1840, group: 'E' },
+        { id: 'ecuador', name: 'Ecuador', elo: 1850, group: 'E' }
       ],
       matches: []
     },
@@ -112,10 +117,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group F',
       teams: [
-        { id: 'argentina', name: 'Argentina', elo: 2100, group: 'F' },
-        { id: 'portugal', name: 'Portugal', elo: 2070, group: 'F' },
-        { id: 'poland', name: 'Poland', elo: 1870, group: 'F' },
-        { id: 'saudi_arabia', name: 'Saudi Arabia', elo: 1720, group: 'F' }
+        { id: 'netherlands', name: 'Netherlands', elo: 2050, group: 'F' },
+        { id: 'japan', name: 'Japan', elo: 1840, group: 'F' },
+        { id: 'sweden', name: 'Sweden', elo: 1920, group: 'F' },
+        { id: 'tunisia', name: 'Tunisia', elo: 1760, group: 'F' }
       ],
       matches: []
     },
@@ -123,10 +128,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group G',
       teams: [
-        { id: 'uruguay', name: 'Uruguay', elo: 2010, group: 'G' },
-        { id: 'switzerland', name: 'Switzerland', elo: 1970, group: 'G' },
-        { id: 'ghana', name: 'Ghana', elo: 1800, group: 'G' },
-        { id: 'south_korea', name: 'South Korea', elo: 1830, group: 'G' }
+        { id: 'belgium', name: 'Belgium', elo: 2040, group: 'G' },
+        { id: 'egypt', name: 'Egypt', elo: 1780, group: 'G' },
+        { id: 'iran', name: 'Iran', elo: 1800, group: 'G' },
+        { id: 'new_zealand', name: 'New Zealand', elo: 1650, group: 'G' }
       ],
       matches: []
     },
@@ -134,10 +139,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group H',
       teams: [
-        { id: 'japan', name: 'Japan', elo: 1840, group: 'H' },
-        { id: 'nigeria', name: 'Nigeria', elo: 1830, group: 'H' },
-        { id: 'morocco', name: 'Morocco', elo: 1860, group: 'H' },
-        { id: 'tunisia', name: 'Tunisia', elo: 1760, group: 'H' }
+        { id: 'spain', name: 'Spain', elo: 2050, group: 'H' },
+        { id: 'cape_verde', name: 'Cape Verde', elo: 1680, group: 'H' },
+        { id: 'saudi_arabia', name: 'Saudi Arabia', elo: 1720, group: 'H' },
+        { id: 'uruguay', name: 'Uruguay', elo: 2010, group: 'H' }
       ],
       matches: []
     },
@@ -145,10 +150,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group I',
       teams: [
+        { id: 'france', name: 'France', elo: 2120, group: 'I' },
         { id: 'senegal', name: 'Senegal', elo: 1900, group: 'I' },
-        { id: 'algeria', name: 'Algeria', elo: 1790, group: 'I' },
-        { id: 'australia', name: 'Australia', elo: 1740, group: 'I' },
-        { id: 'panama', name: 'Panama', elo: 1680, group: 'I' }
+        { id: 'iraq', name: 'Iraq', elo: 1650, group: 'I' },
+        { id: 'norway', name: 'Norway', elo: 1900, group: 'I' }
       ],
       matches: []
     },
@@ -156,10 +161,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group J',
       teams: [
-        { id: 'sweden', name: 'Sweden', elo: 1920, group: 'J' },
-        { id: 'czech_republic', name: 'Czech Republic', elo: 1850, group: 'J' },
-        { id: 'egypt', name: 'Egypt', elo: 1780, group: 'J' },
-        { id: 'indonesia', name: 'Indonesia', elo: 1600, group: 'J' }
+        { id: 'argentina', name: 'Argentina', elo: 2100, group: 'J' },
+        { id: 'algeria', name: 'Algeria', elo: 1790, group: 'J' },
+        { id: 'austria', name: 'Austria', elo: 1870, group: 'J' },
+        { id: 'jordan', name: 'Jordan', elo: 1650, group: 'J' }
       ],
       matches: []
     },
@@ -167,10 +172,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group K',
       teams: [
-        { id: 'ireland', name: 'Ireland', elo: 1800, group: 'K' },
-        { id: 'turkey', name: 'Turkey', elo: 1900, group: 'K' },
-        { id: 'peru', name: 'Peru', elo: 1820, group: 'K' },
-        { id: 'kenya', name: 'Kenya', elo: 1650, group: 'K' }
+        { id: 'portugal', name: 'Portugal', elo: 2070, group: 'K' },
+        { id: 'congo_dr', name: 'Congo DR', elo: 1700, group: 'K' },
+        { id: 'uzbekistan', name: 'Uzbekistan', elo: 1700, group: 'K' },
+        { id: 'colombia', name: 'Colombia', elo: 1970, group: 'K' }
       ],
       matches: []
     },
@@ -178,10 +183,10 @@ export const WORLD_CUP_2026: TournamentStructure = {
     {
       name: 'Group L',
       teams: [
-        { id: 'chile', name: 'Chile', elo: 1880, group: 'L' },
-        { id: 'russia', name: 'Russia', elo: 1920, group: 'L' },
-        { id: 'qatar', name: 'Qatar', elo: 1750, group: 'L' },
-        { id: 'ivory_coast', name: 'Ivory Coast', elo: 1840, group: 'L' }
+        { id: 'england', name: 'England', elo: 2080, group: 'L' },
+        { id: 'croatia', name: 'Croatia', elo: 1990, group: 'L' },
+        { id: 'ghana', name: 'Ghana', elo: 1800, group: 'L' },
+        { id: 'panama', name: 'Panama', elo: 1680, group: 'L' }
       ],
       matches: []
     }

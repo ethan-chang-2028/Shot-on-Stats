@@ -12,6 +12,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { runBacktest, summarizeBacktest, type BacktestMatchComparison } from '@/lib/backtest';
+import { WORLD_CUP_2026_RESULTS } from '@/data/worldCup2026Results';
+
+const TOTAL_MATCHES = WORLD_CUP_2026_RESULTS.length;
 
 const OUTCOME_LABEL: Record<'teamA' | 'teamB' | 'draw', (a: string, b: string) => string> = {
   teamA: (a) => `${a} win`,
@@ -37,7 +40,7 @@ export default function BacktestPage() {
   const runTest = () => {
     setIsRunning(true);
     // Let the "Running..." state paint before the (fast, synchronous) 10,000-trial
-    // simulations run for all 10 matches.
+    // simulations run for every match.
     setTimeout(() => {
       setResults(runBacktest(10000));
       setIsRunning(false);
@@ -76,14 +79,14 @@ export default function BacktestPage() {
                 Run the Backtest
               </CardTitle>
               <CardDescription>
-                10 real knockout matches, from the Round of 16 through the Final
+                {TOTAL_MATCHES} real knockout matches, from the Round of 32 through the Final
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button onClick={runTest} disabled={isRunning} size="lg" className="flex items-center gap-2">
                   <Play className="h-4 w-4" />
-                  {isRunning ? 'Running 10,000 trials × 10 matches…' : results ? 'Re-run Backtest' : 'Run Backtest'}
+                  {isRunning ? `Running 10,000 trials × ${TOTAL_MATCHES} matches…` : results ? 'Re-run Backtest' : 'Run Backtest'}
                 </Button>
                 {results && (
                   <Button onClick={() => setResults(null)} variant="ghost" size="lg" className="flex items-center gap-2">
@@ -123,7 +126,7 @@ export default function BacktestPage() {
               </Card>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              A small, high-variance sample by design — 10 knockout matches, not a full season —
+              A high-variance sample by design — {TOTAL_MATCHES} knockout matches, not a full season —
               so treat this as a demonstration of the validation method (PRD Section 9), not a
               claim of production-grade accuracy. Deep knockout runs are exactly where a
               no-home-advantage, independent-Poisson model is expected to miss some upsets
