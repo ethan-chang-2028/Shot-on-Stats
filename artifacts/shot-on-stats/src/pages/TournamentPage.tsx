@@ -890,7 +890,9 @@ export default function TournamentPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(matchResults).slice(0, 5).map(([matchId, result]) => {
+                  {/* Object key order = insertion order, so the *last* 5 entries
+                      are the most recently decided matches, not the first. */}
+                  {Object.entries(matchResults).slice(-5).reverse().map(([matchId, result]) => {
                     const r = result.result;
                     return (
                       <div key={matchId} className="p-3 rounded-lg border border-border bg-secondary/50">
