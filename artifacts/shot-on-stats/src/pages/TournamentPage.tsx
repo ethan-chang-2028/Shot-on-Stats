@@ -213,6 +213,21 @@ export default function TournamentPage() {
     return finalMatch?.winner?.name ?? null;
   }, [progress, updateTick]);
 
+  // The "Simulating: A vs B" lookup must resolve regardless of completion
+  // state - allStageMatches filters out completed matches, so once
+  // applyDecidedOutcome marks the active match complete (during its brief
+  // post-decision pause) that lookup would return undefined and render
+  // blank team names.
+  const activeMatch = useMemo(() => {
+    if (!activeMatchId) return null;
+    const allMatches = [
+      ...tournament.groups.flatMap(g => g.matches),
+      ...progress.completedMatches,
+      ...progress.remainingMatches,
+    ];
+    return allMatches.find(m => m.id === activeMatchId) ?? null;
+  }, [activeMatchId, tournament, progress, updateTick]);
+
   // Select/deselect all matches
   useEffect(() => {
     if (selectAll) {
@@ -524,11 +539,17 @@ export default function TournamentPage() {
             }
           }
           setActiveMatchId(match.id);
+          // Yield to the browser before deciding the match, so it actually
+          // paints "Simulating: A vs B" instead of jumping straight to the
+          // result - otherwise 104 matches resolve in one synchronous burst
+          // and a class watching this never sees the group stage play out.
+          await new Promise(resolve => setTimeout(resolve, 0));
           const stats = computeMatchStats(match);
           applyDecidedOutcome(match, stats);
+          await new Promise(resolve => setTimeout(resolve, 60));
         }
 
-        await new Promise(resolve => setTimeout(resolve, 100)); // brief pause between stages for UI feedback
+        await new Promise(resolve => setTimeout(resolve, 250)); // longer pause between stages for UI feedback
       }
     } catch (error) {
       console.error('Full tournament simulation error:', error);
@@ -657,7 +678,7 @@ export default function TournamentPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Play className="h-5 w-5 animate-pulse" />
-                  Simulating: {allStageMatches.find(m => m.id === activeMatchId)?.teamA.name} vs {allStageMatches.find(m => m.id === activeMatchId)?.teamB.name}
+                  Simulating: {activeMatch?.teamA.name} vs {activeMatch?.teamB.name}
                 </CardTitle>
                 <CardDescription>
                   {simulationMode === 'single' 
