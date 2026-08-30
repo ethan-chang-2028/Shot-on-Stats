@@ -73,10 +73,9 @@ const SIM_STAGE_RANK: Record<TournamentStage, number> = {
 };
 
 // Furthest stage a team reached in *this* simulated run - same label set as
-// getRealOutcome where the stages overlap, so the two can be compared
-// directly, plus two labels (Round of 32 exit / Eliminated in Group Stage)
-// for outcomes the real dataset doesn't track at all.
-function getSimulatedOutcome(teamName: string, matches: TournamentMatch[]): TeamOutcomeLabel | 'Eliminated in Group Stage' | 'Not simulated' {
+// getRealOutcome (including 'Eliminated in Group Stage') so the two can be
+// compared directly, plus 'Not simulated' for a team not reached yet.
+function getSimulatedOutcome(teamName: string, matches: TournamentMatch[]): TeamOutcomeLabel | 'Not simulated' {
   const teamMatches = matches.filter(m => m.teamA.name === teamName || m.teamB.name === teamName);
   if (teamMatches.length === 0) return 'Not simulated';
 
@@ -1081,10 +1080,10 @@ export default function TournamentPage() {
                   </table>
                 </div>
                 <p className="text-xs text-muted-foreground mt-4">
-                  These are the real 2026 groups and the 32 teams that actually reached the real Round of 32 (the
-                  other 16 real teams were eliminated in the group stage, which isn't reconstructed here). Each
-                  match in this simulation is still an independent random draw, so the exact path a team takes
-                  to its finish won't match reality even in a run where the finish itself does.
+                  These are the real 2026 groups and the real result every one of the 48 teams reached, group
+                  stage through the Final. Each match in this simulation is still an independent random draw,
+                  so the exact path a team takes to its finish won't match reality even in a run where the
+                  finish itself does.
                 </p>
               </CardContent>
             </Card>
