@@ -122,6 +122,13 @@ export default function TournamentPage() {
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const [matchResults, setMatchResults] = useState<Record<string, MatchResult>>({});
 
+  // "Full Tournament" always starts from a clean slate: resetTournament()
+  // triggers React state updates (new progress/tournament references), and
+  // this flag defers the actual run to the effect below so it runs against
+  // the *post-reset* state instead of the stale closure captured before the
+  // reset (state updates aren't visible synchronously in the same handler).
+  const [pendingFullRun, setPendingFullRun] = useState(false);
+
   // simulator/progress/tournament are plain mutable objects (not React
   // state), so mutating them - a completed match, updated standings, a
   // freshly-generated next stage - doesn't itself trigger a re-render or
@@ -498,6 +505,22 @@ export default function TournamentPage() {
     setMatchResults({});
   }, [simulator]);
 
+  // Always start a completely fresh tournament, even if a previous run (or
+  // any partial simulation) already happened in this session - a second
+  // click on "Full Tournament" should never be a silent no-op.
+  const startFullTournament = useCallback(() => {
+    if (isRunning) return;
+    resetTournament();
+    setPendingFullRun(true);
+  }, [isRunning, resetTournament]);
+
+  useEffect(() => {
+    if (pendingFullRun) {
+      setPendingFullRun(false);
+      simulateFullTournament();
+    }
+  }, [pendingFullRun, simulateFullTournament]);
+
   // Toggle pause
   const togglePause = useCallback(() => {
     setIsPaused(prev => !prev);
@@ -785,14 +808,14 @@ export default function TournamentPage() {
                   </Button>
                   
                   <Button
-                    onClick={simulateFullTournament}
-                    disabled={isRunning || progress.completedMatches.length > 0}
+                    onClick={startFullTournament}
+                    disabled={isRunning}
                     variant="secondary"
                     className="flex items-center justify-center gap-2"
                     size="lg"
                   >
                     <Trophy className="h-4 w-4" />
-                    Full Tournament
+                    Full Tournament (Restart)
                   </Button>
                 </div>
 
