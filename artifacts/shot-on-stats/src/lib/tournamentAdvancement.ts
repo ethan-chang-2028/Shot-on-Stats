@@ -4,6 +4,23 @@
 import { drawMatchOutcome, drawKnockoutOutcome } from './simulation';
 import type { TournamentGroup, TournamentMatch, TournamentTeam } from '@/types/tournament';
 
+// The real 2026 World Cup is co-hosted by the USA, Mexico and Canada, and
+// each host always plays its group-stage matches on home soil - the one
+// point in the tournament where "home advantage" is an unambiguous fact
+// rather than a venue-by-venue guess (knockout matches are shared across all
+// three countries' stadiums, so they stay neutral). 60 Elo points matches
+// the default home-advantage value on the live match simulator elsewhere in
+// this app.
+const HOST_NATIONS = ['USA', 'Mexico', 'Canada'];
+const GROUP_STAGE_HOME_ADVANTAGE = 60;
+
+export function getHomeAdvantage(stage: string, teamAName: string, teamBName: string): number {
+  if (stage !== 'group' && stage !== 'Group Stage') return 0;
+  if (HOST_NATIONS.includes(teamAName)) return GROUP_STAGE_HOME_ADVANTAGE;
+  if (HOST_NATIONS.includes(teamBName)) return -GROUP_STAGE_HOME_ADVANTAGE;
+  return 0;
+}
+
 // Recomputes points / goal difference / goals for from a group's completed
 // matches (using each match's realized teamAScore/teamBScore) and returns
 // each group's standings sorted by points, then goal difference, then goals
@@ -114,7 +131,8 @@ export interface DecidedOutcome {
 // for the group stage, or a decisive knockout result (extra time, then a
 // near-coin-flip shootout) for every other stage.
 export function decideMatchOutcome(match: TournamentMatch): DecidedOutcome {
-  const config = { eloA: match.teamA.elo, eloB: match.teamB.elo, homeAdvantage: 0, baselineGoals: 1.3, c: 200, numTrials: 0 };
+  const homeAdvantage = getHomeAdvantage(match.stage, match.teamA.name, match.teamB.name);
+  const config = { eloA: match.teamA.elo, eloB: match.teamB.elo, homeAdvantage, baselineGoals: 1.3, c: 200, numTrials: 0 };
 
   if (match.stage === 'group') {
     const { goalsA, goalsB } = drawMatchOutcome(config);

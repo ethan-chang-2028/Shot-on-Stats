@@ -2,6 +2,7 @@
 // live predictions against real, completed 2026 World Cup matches, so the
 // model's accuracy can be measured the way PRD Section 9 describes.
 import { runSimulation } from './simulation';
+import { getHomeAdvantage } from './tournamentAdvancement';
 import {
   WORLD_CUP_2026_RESULTS,
   outcomeOf,
@@ -37,7 +38,10 @@ export function runBacktest(numTrials = 10000): BacktestMatchComparison[] {
     const result = runSimulation({
       eloA: match.teamA.elo,
       eloB: match.teamB.elo,
-      homeAdvantage: 0, // matches the no-home-advantage design used elsewhere in this demo
+      // Real host nations (USA, Mexico, Canada) play every group match on
+      // home soil; every other stage is neutral-venue, matching the design
+      // used elsewhere in this demo.
+      homeAdvantage: getHomeAdvantage(match.stage, match.teamA.name, match.teamB.name),
       baselineGoals: 1.3,
       c: 200,
       numTrials,
