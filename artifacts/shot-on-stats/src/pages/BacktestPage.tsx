@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import {
   ArrowLeft,
+  BarChart3,
   CheckCircle2,
   ClipboardList,
   GitBranch,
@@ -18,6 +19,9 @@ import { runBacktest, summarizeBacktest, type BacktestMatchComparison } from '@/
 import { runCascadeBracket, type CascadeResult } from '@/lib/cascadeBacktest';
 import { WORLD_CUP_2026_RESULTS } from '@/data/worldCup2026Results';
 import { ConnectedBracket, groupMatchesByBracketSlot } from '@/components/ConnectedBracket';
+import { GroupStandings } from '@/components/GroupStandings';
+import { computeGroupStandings } from '@/lib/tournamentAdvancement';
+import { WORLD_CUP_2026 } from '@/types/tournament';
 
 const TOTAL_MATCHES = WORLD_CUP_2026_RESULTS.length;
 const REAL_FINAL = WORLD_CUP_2026_RESULTS.find((m) => m.stage === 'Final');
@@ -51,6 +55,11 @@ export default function BacktestPage() {
 
   const cascadeBracketByStage = useMemo(
     () => (cascade ? groupMatchesByBracketSlot(cascade.matches.map((m) => m.match)) : null),
+    [cascade],
+  );
+
+  const cascadeGroupStandings = useMemo(
+    () => (cascade ? computeGroupStandings(WORLD_CUP_2026.groups, cascade.matches.map((m) => m.match)) : null),
     [cascade],
   );
 
@@ -386,6 +395,25 @@ export default function BacktestPage() {
               round, which is exactly the point of this mode. Re-run it and this number, and the bracket itself,
               will likely change: every match is still an independent random draw.
             </p>
+          </section>
+        )}
+
+        {mode === 'cascade' && cascade && cascadeGroupStandings && (
+          <section className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  The Cascade's Group Stage
+                </CardTitle>
+                <CardDescription>
+                  Who the model itself sent through to Round of 32 - not who really qualified
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GroupStandings groups={WORLD_CUP_2026.groups} standings={cascadeGroupStandings} />
+              </CardContent>
+            </Card>
           </section>
         )}
 

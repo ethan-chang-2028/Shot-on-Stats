@@ -47,6 +47,7 @@ import {
 } from '@/types/tournament';
 import { REAL_2026_TRACKED_TEAMS, getRealOutcome, type TeamOutcomeLabel } from '@/data/worldCup2026Results';
 import { ConnectedBracket, groupMatchesByBracketSlot } from '@/components/ConnectedBracket';
+import { GroupStandings } from '@/components/GroupStandings';
 
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
@@ -1121,36 +1122,7 @@ export default function TournamentPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {tournament.groups.map((group) => {
-                  const standings = groupStandings[group.name] || group.teams;
-                  return (
-                    <div key={group.name} className="space-y-2">
-                      <h3 className="font-semibold text-center border-b pb-2">{group.name}</h3>
-                      <div className="space-y-2">
-                        {standings.map((team, index) => (
-                          <div key={team.id} className={`flex items-center justify-between p-2 rounded-lg text-sm ${
-                            index < 2 ? 'bg-green-500/20 border border-green-500/30' : 'bg-secondary/50 border border-border'
-                          }`}>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-muted-foreground">{index + 1}.</span>
-                              <span className="font-medium">{team.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono">{team.points || 0} pts</span>
-                              {index < 2 && (
-                                <span className="text-xs bg-green-500 text-green-900 px-2 py-0.5 rounded-full font-bold">
-                                  Qualifies
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <GroupStandings groups={tournament.groups} standings={groupStandings} />
             </CardContent>
           </Card>
         </section>
