@@ -151,9 +151,14 @@ class TournamentSimulator {
         completed: false
       };
 
+      // Third place is contested by the two semifinal *losers*. Comparing
+      // against `winners[i]` here is a no-op - winners[i] literally is
+      // stageResults[i].winner - so it always picked teamB, which is only
+      // the loser half the time; comparing against the match's own teamA
+      // is the actual "did teamA win" check.
       const thirdPlaceTeams = [
-        stageResults[0].winner === winners[0] ? stageResults[0].match.teamB : stageResults[0].match.teamA,
-        stageResults[1].winner === winners[1] ? stageResults[1].match.teamB : stageResults[1].match.teamA
+        stageResults[0].winner === stageResults[0].match.teamA ? stageResults[0].match.teamB : stageResults[0].match.teamA,
+        stageResults[1].winner === stageResults[1].match.teamA ? stageResults[1].match.teamB : stageResults[1].match.teamA
       ];
 
       const thirdPlaceMatch: TournamentMatch = {
