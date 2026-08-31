@@ -32,7 +32,7 @@ import {
 } from 'recharts';
 import { TournamentSimulator } from '@/lib/tournamentSimulation';
 import { runSimulation, getMostLikelyScoreline } from '@/lib/simulation';
-import { computeGroupStandings, advanceFromGroupStage, seedKnockoutTeams, decideMatchOutcome } from '@/lib/tournamentAdvancement';
+import { computeGroupStandings, advanceFromGroupStage, seedKnockoutTeams, decideMatchOutcome, getHomeAdvantage } from '@/lib/tournamentAdvancement';
 import {
   WORLD_CUP_2026,
   TournamentStage,
@@ -272,7 +272,7 @@ export default function TournamentPage() {
     const result = runSimulation({
       eloA: match.teamA.elo,
       eloB: match.teamB.elo,
-      homeAdvantage: 0,
+      homeAdvantage: getHomeAdvantage(match.stage, match.teamA.name, match.teamB.name),
       baselineGoals: 1.3,
       c: 200,
       numTrials: 10000

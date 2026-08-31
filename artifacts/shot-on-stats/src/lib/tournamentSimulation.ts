@@ -1,6 +1,6 @@
 // Shot on Stats - Tournament Simulation Engine for 2026 World Cup
 import { runSimulation, type SimulationConfig, type SimulationResult } from './simulation';
-import { computeGroupStandings, advanceFromGroupStage, seedKnockoutTeams, decideMatchOutcome } from './tournamentAdvancement';
+import { computeGroupStandings, advanceFromGroupStage, seedKnockoutTeams, decideMatchOutcome, getHomeAdvantage } from './tournamentAdvancement';
 import {
   TournamentTeam,
   TournamentMatch,
@@ -64,7 +64,7 @@ class TournamentSimulator {
     const config: SimulationConfig = {
       eloA: match.teamA.elo,
       eloB: match.teamB.elo,
-      homeAdvantage: 0,
+      homeAdvantage: getHomeAdvantage(match.stage, match.teamA.name, match.teamB.name),
       baselineGoals: 1.3,
       c: 200,
       numTrials: 10000
