@@ -17,6 +17,7 @@ import {
 import { runBacktest, summarizeBacktest, type BacktestMatchComparison } from '@/lib/backtest';
 import { runCascadeBracket, type CascadeResult } from '@/lib/cascadeBacktest';
 import { WORLD_CUP_2026_RESULTS } from '@/data/worldCup2026Results';
+import { ConnectedBracket, groupMatchesByBracketSlot } from '@/components/ConnectedBracket';
 
 const TOTAL_MATCHES = WORLD_CUP_2026_RESULTS.length;
 const REAL_FINAL = WORLD_CUP_2026_RESULTS.find((m) => m.stage === 'Final');
@@ -46,6 +47,11 @@ export default function BacktestPage() {
   const finalMatch = useMemo(
     () => results?.find((r) => r.match.id === 'final-esp-arg') ?? null,
     [results],
+  );
+
+  const cascadeBracketByStage = useMemo(
+    () => (cascade ? groupMatchesByBracketSlot(cascade.matches.map((m) => m.match)) : null),
+    [cascade],
   );
 
   const runTest = () => {
@@ -380,6 +386,25 @@ export default function BacktestPage() {
               round, which is exactly the point of this mode. Re-run it and this number, and the bracket itself,
               will likely change: every match is still an independent random draw.
             </p>
+          </section>
+        )}
+
+        {mode === 'cascade' && cascade && cascadeBracketByStage && (
+          <section className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GitBranch className="h-5 w-5" />
+                  The Cascade's Bracket
+                </CardTitle>
+                <CardDescription>
+                  Round of 32 through the Final, built entirely from the model's own calls
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ConnectedBracket matchesByStage={cascadeBracketByStage} champion={cascade.simulatedChampion} />
+              </CardContent>
+            </Card>
           </section>
         )}
 
