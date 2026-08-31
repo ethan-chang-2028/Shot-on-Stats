@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { runBacktest, summarizeBacktest, type BacktestMatchComparison } from '@/lib/backtest';
 import { runCascadeBracket, type CascadeResult } from '@/lib/cascadeBacktest';
-import { WORLD_CUP_2026_RESULTS } from '@/data/worldCup2026Results';
+import { WORLD_CUP_2026_RESULTS, getRealOutcome } from '@/data/worldCup2026Results';
 import { ConnectedBracket, groupMatchesByBracketSlot } from '@/components/ConnectedBracket';
 import { GroupStandings } from '@/components/GroupStandings';
 import { computeGroupStandings } from '@/lib/tournamentAdvancement';
@@ -407,11 +407,23 @@ export default function BacktestPage() {
                   The Cascade's Group Stage
                 </CardTitle>
                 <CardDescription>
-                  Who the model itself sent through to Round of 32 - not who really qualified
+                  Who the model itself sent through to Round of 32, with who really qualified shown under each team
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <GroupStandings groups={WORLD_CUP_2026.groups} standings={cascadeGroupStandings} />
+                <GroupStandings
+                  groups={WORLD_CUP_2026.groups}
+                  standings={cascadeGroupStandings}
+                  renderRealBadge={(team) => {
+                    const real = getRealOutcome(team.name);
+                    const reallyQualified = real !== 'Eliminated in Group Stage' && real !== 'Not tracked';
+                    return (
+                      <span className={reallyQualified ? 'text-green-600 font-medium' : ''}>
+                        Real: {reallyQualified ? 'Qualified for Round of 32' : 'Eliminated in Group Stage'}
+                      </span>
+                    );
+                  }}
+                />
               </CardContent>
             </Card>
           </section>
