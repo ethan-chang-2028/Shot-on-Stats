@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Database, Shield, TrendingUp, ClipboardCheck } from 'lucide-react';
+import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Database, Shield, TrendingUp, ClipboardCheck, Scale, Check, X, Minus } from 'lucide-react';
 import { Link } from 'wouter';
 
 // Import the user's uploaded images
@@ -442,6 +442,94 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Competitive Comparison */}
+        <section className="mb-8" id="competition">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Scale className="h-5 w-5" />
+                How Soccer Predictors Compare
+              </CardTitle>
+              <CardDescription>
+                Every option a fan actually has today, side by side
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left">
+                      <th className="py-3 pr-4 font-medium">What it takes to trust a prediction</th>
+                      <th className="py-3 px-3 font-medium text-center whitespace-nowrap">
+                        Pundit "supercomputer"<br />
+                        <span className="text-xs font-normal text-muted-foreground">e.g. BBC Opta</span>
+                      </th>
+                      <th className="py-3 px-3 font-medium text-center whitespace-nowrap">
+                        Betting odds<br />
+                        <span className="text-xs font-normal text-muted-foreground">DraftKings, FanDuel</span>
+                      </th>
+                      <th className="py-3 px-3 font-medium text-center whitespace-nowrap">
+                        Match-app AI %<br />
+                        <span className="text-xs font-normal text-muted-foreground">FotMob, Sofascore</span>
+                      </th>
+                      <th className="py-3 pl-3 font-medium text-center whitespace-nowrap text-primary">
+                        Shot on Stats
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        label: 'Shows the actual calculation, not just a verdict',
+                        values: ['no', 'no', 'no', 'yes'],
+                      },
+                      {
+                        label: 'Free, no account required to see it',
+                        values: ['yes', 'yes', 'yes', 'yes'],
+                      },
+                      {
+                        label: 'Independent of gambling / bookmaker incentives',
+                        values: ['yes', 'no', 'yes', 'yes'],
+                      },
+                      {
+                        label: 'Publishes a public predicted-vs-actual track record',
+                        values: ['no', 'partial', 'no', 'yes'],
+                      },
+                      {
+                        label: 'Lets you test your own "what-if" ratings',
+                        values: ['no', 'no', 'no', 'yes'],
+                      },
+                      {
+                        label: 'Plain-language explanation included',
+                        values: ['partial', 'no', 'partial', 'yes'],
+                      },
+                    ].map((row) => (
+                      <tr key={row.label} className="border-b border-border/60">
+                        <td className="py-3 pr-4 text-muted-foreground">{row.label}</td>
+                        {row.values.map((v, i) => (
+                          <td key={i} className="py-3 px-3 text-center">
+                            {v === 'yes' && <Check className="h-4 w-4 text-green-500 inline-block" />}
+                            {v === 'no' && <X className="h-4 w-4 text-red-500 inline-block" />}
+                            {v === 'partial' && <Minus className="h-4 w-4 text-muted-foreground inline-block" />}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                "Betting odds" reflect a bookmaker's implied probability, which can look like a
+                track record in hindsight — but it's a risk-management price, not a published,
+                graded accuracy claim, which is why that cell reads partial rather than yes.
+                "Match-app AI %" refers to the single win-probability number shown on live match
+                pages in apps like FotMob or Sofascore before kickoff — useful, but it's a number
+                without the model, the reasoning, or a way to change the inputs yourself.
+              </p>
             </CardContent>
           </Card>
         </section>
