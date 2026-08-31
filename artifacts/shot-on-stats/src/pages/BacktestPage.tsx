@@ -37,13 +37,6 @@ function outcomeText(outcome: 'teamA' | 'teamB' | 'draw', teamA: string, teamB: 
   return OUTCOME_LABEL[outcome](teamA, teamB);
 }
 
-// "Quarterfinals" (cascade's stage label) vs "Quarterfinal" (real result's
-// stage string) - normalize both to one form so a same-round match doesn't
-// get flagged as cross-round just because one side pluralizes.
-function normalizeStageLabel(stage: string): string {
-  return stage.replace(/s$/, '').replace(' Playoff', '');
-}
-
 export default function BacktestPage() {
   const [mode, setMode] = useState<'real' | 'cascade'>('real');
 
@@ -496,25 +489,16 @@ export default function BacktestPage() {
                                 <HelpCircle className="h-4 w-4" />
                                 Never happened in reality
                               </span>
+                            ) : m.correct ? (
+                              <span className="inline-flex items-center gap-1 text-green-500 text-xs font-bold">
+                                <CheckCircle2 className="h-4 w-4" />
+                                Called it
+                              </span>
                             ) : (
-                              <div>
-                                {m.correct ? (
-                                  <span className="inline-flex items-center gap-1 text-green-500 text-xs font-bold">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    Called it
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-red-500 text-xs font-bold">
-                                    <XCircle className="h-4 w-4" />
-                                    Missed it
-                                  </span>
-                                )}
-                                {m.realMatch && normalizeStageLabel(m.stageLabel) !== normalizeStageLabel(m.realMatch.stage) && (
-                                  <div className="text-[11px] font-normal text-muted-foreground mt-0.5">
-                                    It did happen in reality - as the {m.realMatch.stage}, not the {m.stageLabel}
-                                  </div>
-                                )}
-                              </div>
+                              <span className="inline-flex items-center gap-1 text-red-500 text-xs font-bold">
+                                <XCircle className="h-4 w-4" />
+                                Missed it
+                              </span>
                             )}
                           </td>
                         </tr>

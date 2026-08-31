@@ -6,12 +6,16 @@
 //
 // This is deliberately NOT a formal accuracy backtest (PRD Section 9 still
 // means runBacktest()): once the model's own results diverge from history,
-// later rounds can pair two teams that never actually played each other, so
-// there's no real result to grade those matches against. Only matches where
-// this cascade happens to reproduce a real-world pairing (guaranteed for the
-// 72 group matches, incidental for knockout matches) get a "correct" verdict.
+// later rounds can pair two teams that never actually played each other in
+// that same round, so there's no real result to grade those matches
+// against. Only matches where this cascade reproduces a real-world pairing
+// in the same round - guaranteed for the 72 group matches, since those
+// share the real fixed round-robin schedule, incidental for knockout
+// matches - get a "correct" verdict; everything else (including two teams
+// who really met, just in a different round) is treated as never having
+// happened, for simplicity.
 import { TournamentSimulator } from './tournamentSimulation';
-import { STAGE_LABELS, type TournamentMatch } from '@/types/tournament';
+import { STAGE_LABELS, type TournamentMatch, type TournamentStage } from '@/types/tournament';
 import { WORLD_CUP_2026_RESULTS, outcomeOf, type RealMatchResult, type MatchOutcome } from '@/data/worldCup2026Results';
 
 export interface CascadeMatchResult {
@@ -21,7 +25,7 @@ export interface CascadeMatchResult {
   simulatedOutcome: MatchOutcome;
   realMatch: RealMatchResult | null;
   actualScoreline: string | null;
-  correct: boolean | null; // null when this pairing never happened in reality
+  correct: boolean | null; // null when this pairing never happened in reality, in this round
 }
 
 export interface CascadeResult {
@@ -31,12 +35,21 @@ export interface CascadeResult {
   comparableCorrect: number;
 }
 
-function findRealMatch(teamAName: string, teamBName: string): RealMatchResult | null {
+// "Quarterfinals" (STAGE_LABELS) vs "Quarterfinal" (RealMatchResult.stage) -
+// normalize both to one form so a same-round match isn't missed just
+// because one side pluralizes.
+function normalizeStageLabel(stage: string): string {
+  return stage.replace(/s$/, '').replace(' Playoff', '');
+}
+
+function findRealMatch(teamAName: string, teamBName: string, stage: TournamentStage): RealMatchResult | null {
+  const expectedStage = normalizeStageLabel(STAGE_LABELS[stage]);
   return (
     WORLD_CUP_2026_RESULTS.find(
       (m) =>
-        (m.teamA.name === teamAName && m.teamB.name === teamBName) ||
-        (m.teamA.name === teamBName && m.teamB.name === teamAName)
+        normalizeStageLabel(m.stage) === expectedStage &&
+        ((m.teamA.name === teamAName && m.teamB.name === teamBName) ||
+         (m.teamA.name === teamBName && m.teamB.name === teamAName))
     ) ?? null
   );
 }
@@ -53,7 +66,7 @@ export async function runCascadeBracket(): Promise<CascadeResult> {
     const scoreA = match.teamAScore ?? 0;
     const scoreB = match.teamBScore ?? 0;
     const simulatedOutcome: MatchOutcome = scoreA > scoreB ? 'teamA' : scoreB > scoreA ? 'teamB' : 'draw';
-    const realMatch = findRealMatch(match.teamA.name, match.teamB.name);
+    const realMatch = findRealMatch(match.teamA.name, match.teamB.name, match.stage);
 
     let actualScoreline: string | null = null;
     let correct: boolean | null = null;
