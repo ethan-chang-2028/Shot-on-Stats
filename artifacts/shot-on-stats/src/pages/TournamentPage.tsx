@@ -358,7 +358,11 @@ export default function TournamentPage() {
   // matches), records it, and advances the bracket once its whole stage
   // is done.
   const applyDecidedOutcome = useCallback((match: TournamentMatch, stats: MatchStats) => {
-    const outcome = decideMatchOutcome(match);
+    const outcome = decideMatchOutcome(match, {
+      winProbability: stats.winProbability,
+      drawProbability: stats.drawProbability,
+      lossProbability: stats.lossProbability,
+    });
 
     match.completed = true;
     match.teamAScore = outcome.teamAScore;

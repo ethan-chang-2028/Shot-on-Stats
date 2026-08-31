@@ -84,7 +84,11 @@ class TournamentSimulator {
     // distribution; the bracket itself needs one concrete result, drawn
     // from the same model, so the tournament actually has upsets rather
     // than always advancing whichever team is favored.
-    const outcome = decideMatchOutcome(match);
+    const outcome = decideMatchOutcome(match, {
+      winProbability: result.winProbability,
+      drawProbability: result.drawProbability,
+      lossProbability: result.lossProbability,
+    });
 
     match.completed = true;
     match.teamAScore = outcome.teamAScore;

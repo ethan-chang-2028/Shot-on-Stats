@@ -1,7 +1,7 @@
 // Shared group-standings / bracket-advancement / match-outcome logic for the
 // 2026 World Cup simulation, used by both TournamentSimulator and
 // TournamentPage so there is exactly one implementation of "who advances."
-import { drawMatchOutcome, drawKnockoutOutcome } from './simulation';
+import { drawMatchOutcome, drawKnockoutOutcome, type TrialProbabilities } from './simulation';
 import type { TournamentGroup, TournamentMatch, TournamentTeam } from '@/types/tournament';
 
 // The real 2026 World Cup is co-hosted by the USA, Mexico and Canada, and
@@ -128,19 +128,25 @@ export interface DecidedOutcome {
 }
 
 // Draws ONE realized result for a match: a plain scoreline (draws allowed)
-// for the group stage, or a decisive knockout result (extra time, then a
-// near-coin-flip shootout) for every other stage.
-export function decideMatchOutcome(match: TournamentMatch): DecidedOutcome {
+// for the group stage, or a decisive knockout result (extra time, then
+// penalties) for every other stage. Pass the match's own 10,000-trial
+// probabilities (from runSimulation) so the winner is drawn from a
+// sharpened version of those actual shares - the team that wins more of
+// the trials wins more often here too, not just whichever a single
+// independent Poisson roll happened to favor - while a genuine toss-up
+// still plays out close to a coin flip. Omitting them falls back to one
+// unbiased draw (kept for callers that don't have trial stats handy).
+export function decideMatchOutcome(match: TournamentMatch, probabilities?: TrialProbabilities): DecidedOutcome {
   const homeAdvantage = getHomeAdvantage(match.stage, match.teamA.name, match.teamB.name);
   const config = { eloA: match.teamA.elo, eloB: match.teamB.elo, homeAdvantage, baselineGoals: 1.3, c: 200, numTrials: 0 };
 
   if (match.stage === 'group') {
-    const { goalsA, goalsB } = drawMatchOutcome(config);
+    const { goalsA, goalsB } = drawMatchOutcome(config, probabilities);
     const winner = goalsA > goalsB ? match.teamA : goalsB > goalsA ? match.teamB : null;
     return { teamAScore: goalsA, teamBScore: goalsB, wentToPenalties: false, winner };
   }
 
-  const outcome = drawKnockoutOutcome(config);
+  const outcome = drawKnockoutOutcome(config, probabilities);
   return {
     teamAScore: outcome.goalsA,
     teamBScore: outcome.goalsB,
