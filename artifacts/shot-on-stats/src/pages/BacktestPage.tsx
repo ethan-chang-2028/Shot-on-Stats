@@ -196,9 +196,10 @@ export default function BacktestPage() {
             <p className="text-xs text-muted-foreground mt-3">
               A high-variance sample by design — {TOTAL_MATCHES} matches, not a full season —
               so treat this as a demonstration of the validation method (PRD Section 9), not a
-              claim of production-grade accuracy. Deep knockout runs are exactly where a
-              no-home-advantage, independent-Poisson model is expected to miss some upsets
-              (e.g. Spain beating higher-rated France in the semifinal).
+              claim of production-grade accuracy. The model only ever knows pre-match Elo; it has
+              no way to see in-match events that swing a result — a red card, an injury, a
+              refereeing decision — so deep knockout runs are exactly where it's expected to miss
+              some upsets (e.g. Spain beating higher-rated France in the semifinal).
             </p>
           </section>
         )}
