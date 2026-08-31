@@ -3,16 +3,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { BarChart3, Trophy, Users, Target, Lightbulb, DollarSign, Globe, Database, Shield, TrendingUp, ClipboardCheck, Scale, Check, X, Minus } from 'lucide-react';
 import { Link } from 'wouter';
+import { runSimulation, getMostLikelyScoreline } from '@/lib/simulation';
 
 // Import the user's uploaded images
-import statsGraph from '@/assets/stats-graph.png';
 import architectureFlow from '@/assets/architecture-flow.png';
 
 // World Cup 2026 start date
 const WORLD_CUP_2026_START = new Date('2026-06-11');
 
+// A concrete worked example for the WDL bar below - same engine, same
+// formula, just run once on load instead of animated trial-by-trial.
+const EXAMPLE_MATCH = { eloA: 2050, eloB: 1950, homeAdvantage: 65, baselineGoals: 1.3, c: 200, numTrials: 10000 };
+
 export default function HomePage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const exampleResult = useMemo(() => runSimulation(EXAMPLE_MATCH), []);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -74,28 +79,57 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* STATS GRAPH SECTION - User's first image */}
+        {/* GOAL DISTRIBUTION - real output of the engine, not a mockup */}
         <section className="mb-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Live Statistics Dashboard
+                What 10,000 Trials Actually Looks Like
               </CardTitle>
               <CardDescription>
-                Real-time monitoring of our prediction system
+                The goal-count distribution from the same worked example above — real output, not a mockup
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-xl overflow-hidden shadow-lg mb-4">
-                <img
-                  src={statsGraph}
-                  alt="Shot on Stats - System performance and request latency monitoring"
-                  className="w-full h-auto"
-                />
+              <div className="grid gap-6 sm:grid-cols-2">
+                {([
+                  { label: `Team A (Elo ${EXAMPLE_MATCH.eloA})`, dist: exampleResult.teamA.goalDistribution },
+                  { label: `Team B (Elo ${EXAMPLE_MATCH.eloB})`, dist: exampleResult.teamB.goalDistribution },
+                ] as const).map(({ label, dist }) => {
+                  const buckets = [0, 1, 2, 3, 4].map((g) => dist.get(g) ?? 0);
+                  const fivePlus = Array.from(dist.entries())
+                    .filter(([g]) => g >= 5)
+                    .reduce((sum, [, count]) => sum + count, 0);
+                  buckets.push(fivePlus);
+                  const max = Math.max(1, ...buckets);
+                  return (
+                    <div key={label}>
+                      <h4 className="font-semibold text-sm mb-3">{label}</h4>
+                      <div className="flex items-end gap-2 h-28 border-b border-border">
+                        {buckets.map((count, g) => (
+                          <div key={g} className="flex-1 flex flex-col items-center justify-end h-full">
+                            <div
+                              className="w-full bg-primary rounded-t-sm min-h-[2px]"
+                              style={{ height: `${(count / max) * 100}%` }}
+                              title={`${g === 5 ? '5+' : g} goals: ${count.toLocaleString()} trials`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-1">
+                        {buckets.map((_, g) => (
+                          <div key={g} className="flex-1 text-center text-xs text-muted-foreground font-mono">
+                            {g === 5 ? '5+' : g}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <p className="text-sm text-muted-foreground text-center">
-                Tracking requests and system latency to ensure optimal performance
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                Goals scored per trial, out of {EXAMPLE_MATCH.numTrials.toLocaleString()} simulated matches
               </p>
             </CardContent>
           </Card>
@@ -188,6 +222,46 @@ export default function HomePage() {
                       &nbsp;&nbsp;goalsB = Poisson(1.3 - goal_diff/2)
                     </code>
                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    A Live Worked Example
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Team A (Elo {EXAMPLE_MATCH.eloA}, home) vs. Team B (Elo {EXAMPLE_MATCH.eloB}) — the
+                    actual result of running the real engine's 10,000 trials, computed when this page loaded.
+                  </p>
+                  <div className="flex h-9 rounded-lg overflow-hidden border border-border text-xs font-bold text-white">
+                    <div
+                      className="flex items-center justify-center bg-green-600"
+                      style={{ width: `${exampleResult.winProbability * 100}%` }}
+                    >
+                      {(exampleResult.winProbability * 100).toFixed(0)}%
+                    </div>
+                    <div
+                      className="flex items-center justify-center bg-muted-foreground/50"
+                      style={{ width: `${exampleResult.drawProbability * 100}%` }}
+                    >
+                      {(exampleResult.drawProbability * 100).toFixed(0)}%
+                    </div>
+                    <div
+                      className="flex items-center justify-center bg-red-600"
+                      style={{ width: `${exampleResult.lossProbability * 100}%` }}
+                    >
+                      {(exampleResult.lossProbability * 100).toFixed(0)}%
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                    <span>Team A win</span>
+                    <span>Draw</span>
+                    <span>Team B win</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-3">
+                    Most likely scoreline: <strong className="text-foreground font-mono">{getMostLikelyScoreline(exampleResult)}</strong>
+                    {' '}· Avg goals: <strong className="text-foreground font-mono">{exampleResult.teamA.avgGoals.toFixed(2)} – {exampleResult.teamB.avgGoals.toFixed(2)}</strong>
+                  </p>
                 </div>
               </div>
             </CardContent>

@@ -196,6 +196,25 @@ export default function TournamentPage() {
     return progress.knockoutBracket;
   }, [progress, updateTick]);
 
+  // Every match, grouped by stage, regardless of which stage the UI has
+  // selected - powers the always-visible bracket view below so every round
+  // stays on screen at once instead of only the currently-selected one.
+  const bracketByStage = useMemo(() => {
+    const all = [
+      ...tournament.groups.flatMap(g => g.matches),
+      ...progress.completedMatches,
+      ...progress.remainingMatches,
+    ];
+    const byId = new Map(all.map(m => [m.id, m]));
+    const result: Record<TournamentStage, TournamentMatch[]> = {
+      group: [], round32: [], round16: [], quarterfinal: [], semifinal: [], final: [], thirdplace: []
+    };
+    for (const match of byId.values()) {
+      result[match.stage].push(match);
+    }
+    return result;
+  }, [tournament, progress, updateTick]);
+
   // For every team this demo has a real 2026 result for, compare how far
   // they actually went to how far they've gone (so far) in this simulated
   // run. Updates live as matches are decided.
@@ -1090,54 +1109,117 @@ export default function TournamentPage() {
           </section>
         )}
 
-        {/* Group Standings */}
-        {selectedStage === 'group' && (
-          <section className="mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Group Standings
-                </CardTitle>
-                <CardDescription>
-                  Top 2 from each group advance to Round of 32
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  {tournament.groups.map((group) => {
-                    const standings = groupStandings[group.name] || group.teams;
-                    return (
-                      <div key={group.name} className="space-y-2">
-                        <h3 className="font-semibold text-center border-b pb-2">{group.name}</h3>
-                        <div className="space-y-2">
-                          {standings.map((team, index) => (
-                            <div key={team.id} className={`flex items-center justify-between p-2 rounded-lg text-sm ${
-                              index < 2 ? 'bg-green-500/20 border border-green-500/30' : 'bg-secondary/50 border border-border'
-                            }`}>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-muted-foreground">{index + 1}.</span>
-                                <span className="font-medium">{team.name}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono">{team.points || 0} pts</span>
-                                {index < 2 && (
-                                  <span className="text-xs bg-green-500 text-green-900 px-2 py-0.5 rounded-full font-bold">
-                                    Qualifies
-                                  </span>
+        {/* Group Standings - always visible, not just while "group" is the
+            selected stage, so the group stage stays on screen once the
+            tournament has moved on to the knockout rounds. */}
+        <section className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Group Stage
+              </CardTitle>
+              <CardDescription>
+                Top 2 from each group advance to Round of 32
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {tournament.groups.map((group) => {
+                  const standings = groupStandings[group.name] || group.teams;
+                  return (
+                    <div key={group.name} className="space-y-2">
+                      <h3 className="font-semibold text-center border-b pb-2">{group.name}</h3>
+                      <div className="space-y-2">
+                        {standings.map((team, index) => (
+                          <div key={team.id} className={`flex items-center justify-between p-2 rounded-lg text-sm ${
+                            index < 2 ? 'bg-green-500/20 border border-green-500/30' : 'bg-secondary/50 border border-border'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-muted-foreground">{index + 1}.</span>
+                              <span className="font-medium">{team.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono">{team.points || 0} pts</span>
+                              {index < 2 && (
+                                <span className="text-xs bg-green-500 text-green-900 px-2 py-0.5 rounded-full font-bold">
+                                  Qualifies
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Knockout Bracket - every round from Round of 32 through the Final
+            and Third Place Playoff, each its own clearly separated column,
+            all visible at once and updating live as matches are decided. */}
+        <section className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Knockout Bracket
+              </CardTitle>
+              <CardDescription>
+                Round of 32 through the Final, plus the Third Place Playoff between the two semifinal losers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {(['round32', 'round16', 'quarterfinal', 'semifinal', 'final', 'thirdplace'] as TournamentStage[]).map((stage) => {
+                  const matches = bracketByStage[stage];
+                  return (
+                    <div key={stage} className="flex-shrink-0 w-56 space-y-2">
+                      <h3 className="font-semibold text-center border-b pb-2 text-sm uppercase tracking-wide">
+                        {STAGE_LABELS[stage]}
+                      </h3>
+                      <div className="space-y-2">
+                        {matches.length === 0 ? (
+                          <div className="p-3 rounded-lg border border-dashed border-border text-center text-xs text-muted-foreground">
+                            Not yet determined
+                          </div>
+                        ) : (
+                          matches.map((match) => {
+                            const aWon = match.completed && match.winner?.id === match.teamA.id;
+                            const bWon = match.completed && match.winner?.id === match.teamB.id;
+                            return (
+                              <div
+                                key={match.id}
+                                className={`p-2 rounded-lg border text-xs space-y-1 ${
+                                  match.completed ? 'border-border bg-secondary/50' : 'border-dashed border-border'
+                                }`}
+                              >
+                                <div className={`flex items-center justify-between ${aWon ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                  <span className="truncate pr-1">{match.teamA.name}</span>
+                                  {match.completed && <span className="font-mono">{match.teamAScore}</span>}
+                                </div>
+                                <div className={`flex items-center justify-between ${bWon ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
+                                  <span className="truncate pr-1">{match.teamB.name}</span>
+                                  {match.completed && <span className="font-mono">{match.teamBScore}</span>}
+                                </div>
+                                {match.wentToPenalties && (
+                                  <div className="text-center text-muted-foreground">(pens)</div>
                                 )}
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            );
+                          })
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-        )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-border/70 flex items-center justify-between font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
